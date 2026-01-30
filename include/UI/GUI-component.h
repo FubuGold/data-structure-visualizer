@@ -1,11 +1,12 @@
+#ifndef UI_GUI_COMPONENT
+#define UI_GUI_COMPONENT
+
 #include <SFML/Graphics.hpp>
-#include <vector>
 #include <functional>
+#include <concepts>
 
 namespace GUI
 {
-
-using callback_t = std::function<void()>;
 
 /**
  * @brief Base class for GUI elements
@@ -15,52 +16,53 @@ using callback_t = std::function<void()>;
  * Use when need to create a special element.
  * 
  */
-class BaseElement
+template<typename callback_t>
+requires std::invocable<callback_t> && std::same_as<std::invoke_result_t<callback_t>, void>
+class BaseElement : public sf::Drawable, public sf::Transformable
 {
 protected:
-    std::vector<std::shared_ptr<sf::Drawable>> parts;
-    sf::RectangleShape interactBound;
-    std::shared_ptr<sf::RenderWindow> window;
-
+    callback_t onClickCallback, onReleaseCallback, onHoverInCallback, onHoverOutCallback;
     bool clicked = false;
     bool hovered = false;
-    
-    callback_t onClickCallback, onReleaseCallback, onHoverInCallback, onHoverOutCallback;
 
     void onClick();
     void onHoverIn();
     void onHoverOut();
     void onRelease();
     
-    bool containPos(sf::Vector2f pos);
-
-    // Note: This function does not check the position of the mouse
     void click(sf::Vector2f pos);
-    // Note: This function does not check the position of the mouse
     void release(sf::Vector2f pos);
-    // Note: This function does not check the position of the mouse
     void hoverIn(sf::Vector2f pos);
-    // Note: This function does not check the position of the mouse
     void hoverOut(sf::Vector2f pos);
 public:
-    // Set callback functions
 
     void setClickCallback(callback_t callback);
     void setHoverInCallback(callback_t callback);
     void setHoverOutCallback(callback_t callback);
     void setReleaseCallback(callback_t callback);
 
-    // Set window pointer
-    void setWindow(std::shared_ptr<sf::RenderWindow> window_ptr);
+    virtual bool containPos(sf::Vector2f pos) = 0;
 
-    // Process the event
-    virtual void pollEvent(const sf::Event& e);
+    virtual void handleEvent(const sf::Event& e) = 0;
+};
 
-    // Set the interactable boundary directly
-    void setBound();
+//======================================================//
 
-    // Calculate the interactable boundary through the parts
-    void recalBound();
+template<typename callback_t>
+requires std::invocable<callback_t,sf::Text&,sf::RectangleShape&>
+class RectangleButton : public BaseElement<callback_t>
+{
+protected:
+    sf::Text text;
+    sf::RectangleShape rect;
+public:
+    void draw() override;
+    
+    void containPos(sf::Vector2f pos) override;
+    
+    void handleEvent(const sf::Event& e) override;
 };
 
 }
+
+#endif
