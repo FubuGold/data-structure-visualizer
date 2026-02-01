@@ -11,18 +11,45 @@ namespace GUI
 sf::Font font("asset/font/SourceCodePro-VariableFont_wght.ttf");
 
 /**
- * @brief Base class for GUI elements
+ * @brief Base element. Only for drawing
+ * 
+ * This is only for class hierarchy. Use the derived class.
+ * 
+ */
+class BaseElement : public sf::Drawable, public sf::Transformable
+{
+protected:
+    sf::RenderWindow *window;
+public:
+    void setWindow(sf::RenderWindow* window_ptr);
+
+    virtual bool containPos(sf::Vector2f pos) = 0;
+
+    void draw(sf::RenderTarget& target, sf::RenderStates state) const override final {};
+    virtual void draw(sf::RenderStates state = sf::RenderStates::Default) = 0;
+};
+
+/**
+ * @brief Interface for interactive element
+ */
+class IInteractiveElement : public BaseElement
+{
+public:
+    virtual ~IInteractiveElement() = default;
+    virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
+};
+
+/**
+ * @brief Base class for interactable GUI elements
  * 
  * @tparam callback_t The type of callback functions used in the element
  * 
- * Recommend use other elements built from this.
- * 
- * Use when need to create a special element.
+ * This is only for class hierarchy. Use the derived class.
  * 
  */
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-class BaseElement : public sf::Drawable, public sf::Transformable
+class InteractiveElement : public IInteractiveElement
 {
 protected:
     callback_t onClickCallback, onReleaseCallback, onHoverInCallback, onHoverOutCallback;
@@ -39,21 +66,13 @@ protected:
     void release();
     void hoverIn();
     void hoverOut();
+
 public:
-
-    void setWindow(sf::RenderWindow *window_ptr);
-
     void setClickCallback(callback_t callback);
     void setHoverInCallback(callback_t callback);
     void setHoverOutCallback(callback_t callback);
     void setReleaseCallback(callback_t callback);
 
-    virtual bool containPos(sf::Vector2f pos) = 0;
-
-    virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
-
-    void draw(sf::RenderTarget& target, sf::RenderStates state) const override final {};
-    virtual void draw(sf::RenderStates state) = 0;
 };
 
 //======================================================//
@@ -65,7 +84,7 @@ public:
  */
 template<typename callback_t = std::function<void(sf::RectangleShape&,sf::Text&)>>
 requires std::invocable<callback_t,sf::RectangleShape&,sf::Text&>
-class RectangleButton : public BaseElement<callback_t,sf::RectangleShape&,sf::Text&>
+class RectangleButton : public InteractiveElement<callback_t,sf::RectangleShape&,sf::Text&>
 {
 protected:
 

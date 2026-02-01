@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UI_GUI_ELEMENT_IMPLEMENTATION
+#define UI_GUI_ELEMENT_IMPLEMENTATION
 
 #include <iostream> // Debug
 #include <SFML/Graphics.hpp>
@@ -21,13 +22,20 @@ sf::FloatRect combineRect(sf::FloatRect rect1, sf::FloatRect rect2)
     return sf::FloatRect({minX,minY}, {maxX - minX, maxY - minY});
 }
 
-// Base element class implementation
+// Base element implementation
+
+// Base interactive element class implementation
+
+void BaseElement::setWindow(sf::RenderWindow* window_ptr)
+{
+    window = window_ptr;
+}
 
 // Helper functions
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::onClick()
+void InteractiveElement<callback_t,Args...>::onClick()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onClickCallback) onClickCallback();
@@ -35,7 +43,7 @@ void BaseElement<callback_t,Args...>::onClick()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::onHoverIn()
+void InteractiveElement<callback_t,Args...>::onHoverIn()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onHoverInCallback) onHoverInCallback();
@@ -43,7 +51,7 @@ void BaseElement<callback_t,Args...>::onHoverIn()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::onHoverOut()
+void InteractiveElement<callback_t,Args...>::onHoverOut()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onHoverOutCallback) onHoverOutCallback();
@@ -51,7 +59,7 @@ void BaseElement<callback_t,Args...>::onHoverOut()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::onRelease()
+void InteractiveElement<callback_t,Args...>::onRelease()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onReleaseCallback) onReleaseCallback();
@@ -60,7 +68,7 @@ void BaseElement<callback_t,Args...>::onRelease()
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::click()
+void InteractiveElement<callback_t,Args...>::click()
 {
     if (clicked || !hovered) return;
     clicked = true;
@@ -68,7 +76,7 @@ void BaseElement<callback_t,Args...>::click()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::release()
+void InteractiveElement<callback_t,Args...>::release()
 {
     if (!clicked) return;
     if (hovered) onRelease();
@@ -76,7 +84,7 @@ void BaseElement<callback_t,Args...>::release()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::hoverIn()
+void InteractiveElement<callback_t,Args...>::hoverIn()
 {
     if (hovered) return;
     hovered = true;
@@ -84,7 +92,7 @@ void BaseElement<callback_t,Args...>::hoverIn()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::hoverOut()
+void InteractiveElement<callback_t,Args...>::hoverOut()
 {
     if (!hovered) return;
     onHoverOut();
@@ -95,32 +103,25 @@ void BaseElement<callback_t,Args...>::hoverOut()
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::setWindow(sf::RenderWindow *window_ptr)
-{
-    this->window = window_ptr;
-}
-
-template<typename callback_t, typename ...Args>
-requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::setClickCallback(callback_t callback)
+void InteractiveElement<callback_t,Args...>::setClickCallback(callback_t callback)
 {
     this->onClickCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::setHoverInCallback(callback_t callback)
+void InteractiveElement<callback_t,Args...>::setHoverInCallback(callback_t callback)
 {
     this->onHoverInCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::setHoverOutCallback(callback_t callback)
+void InteractiveElement<callback_t,Args...>::setHoverOutCallback(callback_t callback)
 {
     this->onHoverOutCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void BaseElement<callback_t,Args...>::setReleaseCallback(callback_t callback)
+void InteractiveElement<callback_t,Args...>::setReleaseCallback(callback_t callback)
 {
     this->onReleaseCallback = callback;
 }
@@ -226,3 +227,5 @@ void RectangleButton<callback_t>::handleEvent(const std::optional<sf::Event>& e)
 }
 
 }
+
+#endif
