@@ -1,5 +1,5 @@
-#ifndef UI_GUI_ELEMENT
-#define UI_GUI_ELEMENT
+#ifndef UI_GUI_ELEMENT_H
+#define UI_GUI_ELEMENT_H
 
 #include <SFML/Graphics.hpp>
 #include <functional>
@@ -8,35 +8,18 @@
 namespace GUI
 {
 
-sf::Font font("asset/font/SourceCodePro-VariableFont_wght.ttf");
-
 /**
- * @brief Base element. Only for drawing
- * 
- * This is only for class hierarchy. Use the derived class.
- * 
+ * @brief Interface for interactable element
  */
-class BaseElement : public sf::Drawable, public sf::Transformable
+class IInteractableElement : public sf::Drawable, public sf::Transformable
 {
 protected:
-    sf::RenderWindow *window;
+    sf::RenderTarget *target_ptr;
 public:
-    void setWindow(sf::RenderWindow* window_ptr);
-
-    virtual bool containPos(sf::Vector2f pos) = 0;
-
-    void draw(sf::RenderTarget& target, sf::RenderStates state) const override final {};
-    virtual void draw(sf::RenderStates state = sf::RenderStates::Default) = 0;
-};
-
-/**
- * @brief Interface for interactive element
- */
-class IInteractiveElement : public BaseElement
-{
-public:
-    virtual ~IInteractiveElement() = default;
+    virtual ~IInteractableElement() = default;
     virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
+    virtual bool containPos(sf::Vector2f pos) = 0;
+    void setWindow(sf::RenderTarget *target_ptr);
 };
 
 /**
@@ -49,13 +32,12 @@ public:
  */
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-class InteractiveElement : public IInteractiveElement
+class InteractableElement : public IInteractableElement
 {
 protected:
     callback_t onClickCallback, onReleaseCallback, onHoverInCallback, onHoverOutCallback;
     bool clicked = false;
     bool hovered = false;
-    sf::RenderWindow *window;
 
     virtual void onClick();
     virtual void onHoverIn();
@@ -68,6 +50,8 @@ protected:
     void hoverOut();
 
 public:
+    virtual ~InteractableElement() = default;
+
     void setClickCallback(callback_t callback);
     void setHoverInCallback(callback_t callback);
     void setHoverOutCallback(callback_t callback);
@@ -84,7 +68,7 @@ public:
  */
 template<typename callback_t = std::function<void(sf::RectangleShape&,sf::Text&)>>
 requires std::invocable<callback_t,sf::RectangleShape&,sf::Text&>
-class RectangleButton : public InteractiveElement<callback_t,sf::RectangleShape&,sf::Text&>
+class RectangleButton : public InteractableElement<callback_t,sf::RectangleShape&,sf::Text&>
 {
 protected:
 
@@ -96,19 +80,21 @@ protected:
     void onHoverIn() override;
     void onHoverOut() override;
 
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
 public:
     RectangleButton(
         sf::Vector2f btnSize = {300, 500},
         sf::Vector2f btnPos = {0, 0},
         std::string text = "",
         int characterSize = 20,
+        int textOutline = 0,
         int borderThickness = 2,
         sf::Color borderColor = sf::Color::Black,
         sf::Color bgColor = sf::Color::White,
         sf::Color textColor = sf::Color::Black
     );
-
-    void draw(sf::RenderStates state = sf::RenderStates::Default) override;
+    ~RectangleButton() = default;
     
     bool containPos(sf::Vector2f pos) override;
     
@@ -119,4 +105,4 @@ public:
 
 #include "GUI-element.ipp"
 
-#endif
+#endif // UI_GUI_ELEMENT_H

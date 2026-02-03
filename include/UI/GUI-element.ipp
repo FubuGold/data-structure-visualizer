@@ -1,49 +1,31 @@
-#ifndef UI_GUI_ELEMENT_IMPLEMENTATION
-#define UI_GUI_ELEMENT_IMPLEMENTATION
+// #ifndef UI_GUI_ELEMENT_IMPLEMENTATION
+// #define UI_GUI_ELEMENT_IMPLEMENTATION
 
 #include <iostream> // Debug
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <concepts>
+#include <assert.h>
+
+#include "GUI-element.h"
+#include "../config/config.h"
 
 namespace GUI
 {
-
-sf::FloatRect combineRect(sf::FloatRect rect1, sf::FloatRect rect2)
-{
-    const auto min = [](float a,float b) { return a < b ? a : b; };
-    const auto max = [](float a,float b) { return a > b ? a : b; };
-
-    float minX = min(rect1.position.x, rect2.position.x),
-            maxX = max(rect1.position.x + rect1.size.x, rect2.position.x + rect2.size.x),
-            minY = min(rect1.position.y, rect2.position.y),
-            maxY = max(rect1.position.y + rect1.size.y, rect2.position.y + rect2.size.y);
-    
-    return sf::FloatRect({minX,minY}, {maxX - minX, maxY - minY});
-}
-
-// Base element implementation
-
-// Base interactive element class implementation
-
-void BaseElement::setWindow(sf::RenderWindow* window_ptr)
-{
-    window = window_ptr;
-}
 
 // Helper functions
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::onClick()
-{
+void InteractableElement<callback_t,Args...>::onClick()
+{    
     if constexpr (std::invocable<callback_t>) {
         if (onClickCallback) onClickCallback();
     }
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::onHoverIn()
+void InteractableElement<callback_t,Args...>::onHoverIn()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onHoverInCallback) onHoverInCallback();
@@ -51,7 +33,7 @@ void InteractiveElement<callback_t,Args...>::onHoverIn()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::onHoverOut()
+void InteractableElement<callback_t,Args...>::onHoverOut()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onHoverOutCallback) onHoverOutCallback();
@@ -59,7 +41,7 @@ void InteractiveElement<callback_t,Args...>::onHoverOut()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::onRelease()
+void InteractableElement<callback_t,Args...>::onRelease()
 {
     if constexpr (std::invocable<callback_t>) {
         if (onReleaseCallback) onReleaseCallback();
@@ -68,7 +50,7 @@ void InteractiveElement<callback_t,Args...>::onRelease()
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::click()
+void InteractableElement<callback_t,Args...>::click()
 {
     if (clicked || !hovered) return;
     clicked = true;
@@ -76,7 +58,7 @@ void InteractiveElement<callback_t,Args...>::click()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::release()
+void InteractableElement<callback_t,Args...>::release()
 {
     if (!clicked) return;
     if (hovered) onRelease();
@@ -84,17 +66,21 @@ void InteractiveElement<callback_t,Args...>::release()
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::hoverIn()
+void InteractableElement<callback_t,Args...>::hoverIn()
 {
+    std::cerr << "Hover in called\n";
     if (hovered) return;
+    std::cerr << "Hover in called\n";
     hovered = true;
     onHoverIn();
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::hoverOut()
+void InteractableElement<callback_t,Args...>::hoverOut()
 {
+    std::cerr << "Hover out called\n";
     if (!hovered) return;
+    std::cerr << "Hover out called\n";
     onHoverOut();
     hovered = false;
 }
@@ -103,25 +89,25 @@ void InteractiveElement<callback_t,Args...>::hoverOut()
 
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::setClickCallback(callback_t callback)
+void InteractableElement<callback_t,Args...>::setClickCallback(callback_t callback)
 {
     this->onClickCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::setHoverInCallback(callback_t callback)
+void InteractableElement<callback_t,Args...>::setHoverInCallback(callback_t callback)
 {
     this->onHoverInCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::setHoverOutCallback(callback_t callback)
+void InteractableElement<callback_t,Args...>::setHoverOutCallback(callback_t callback)
 {
     this->onHoverOutCallback = callback;
 }
 template<typename callback_t, typename ...Args>
 requires std::invocable<callback_t, Args...>
-void InteractiveElement<callback_t,Args...>::setReleaseCallback(callback_t callback)
+void InteractableElement<callback_t,Args...>::setReleaseCallback(callback_t callback)
 {
     this->onReleaseCallback = callback;
 }
@@ -166,11 +152,12 @@ RectangleButton<callback_t>::RectangleButton(
     sf::Vector2f btnPos,
     std::string text,
     int characterSize,
+    int textOutline,
     int borderThickness,
     sf::Color borderColor,
     sf::Color bgColor,
     sf::Color textColor
-  ) : text(font)
+  ) : text(Config::font)
 {
     this->rect.setSize(btnSize);
     
@@ -182,19 +169,21 @@ RectangleButton<callback_t>::RectangleButton(
     this->rect.setOutlineColor(borderColor);
 
     this->text.setString(text);
+    this->text.setOutlineThickness(textOutline);
     this->text.setCharacterSize(characterSize);
     this->text.setFillColor(textColor);
 
-    this->text.setOrigin(this->text.getLocalBounds().size * 0.5f);
-    this->text.setPosition(btnPos + btnSize * 0.5f);
+    // this->text.setOrigin(this->text.getLocalBounds().size * 0.5f);
+    // this->text.setPosition(btnPos + btnSize * 0.5f);
+    this->text.setPosition(btnPos);
 }
 
 template<typename callback_t>
 requires std::invocable<callback_t,sf::RectangleShape&,sf::Text&>
-void RectangleButton<callback_t>::draw(sf::RenderStates state)
+void RectangleButton<callback_t>::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
-    this->window->draw(rect,state);
-    this->window->draw(text,state);
+    target.draw(rect,state);
+    target.draw(text,state);
 }
 
 template<typename callback_t>
@@ -210,22 +199,25 @@ void RectangleButton<callback_t>::handleEvent(const std::optional<sf::Event>& e)
 {
     if (const sf::Event::MouseMoved *mouse_moved = e->getIf<sf::Event::MouseMoved>())
     {
-        sf::Vector2f mouse_pos = this->window->mapPixelToCoords(mouse_moved->position);
+        sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_moved->position);
         if (containPos(mouse_pos)) this->hoverIn();
         else this->hoverOut();
+        
+        // Debug
+        std::cerr << "Text " << this->text.getGlobalBounds().size.x << ' ' << this->text.getGlobalBounds().size.y << '\n';
     }
     else if (const sf::Event::MouseButtonPressed *mouse_pressed = e->getIf<sf::Event::MouseButtonPressed>())
     {
-        sf::Vector2f mouse_pos = this->window->mapPixelToCoords(mouse_pressed->position);
+        sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_pressed->position);
         if (mouse_pressed->button == sf::Mouse::Button::Left && containPos(mouse_pos)) this->click();
     }
     else if (const sf::Event::MouseButtonReleased *mouse_released = e->getIf<sf::Event::MouseButtonReleased>())
     {
-        sf::Vector2f mouse_pos = this->window->mapPixelToCoords(mouse_released->position);
+        sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_released->position);
         if (mouse_released->button == sf::Mouse::Button::Left && containPos(mouse_pos)) this->release();
     }
 }
 
 }
 
-#endif
+// #endif

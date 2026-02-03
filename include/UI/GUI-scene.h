@@ -1,5 +1,5 @@
-#ifndef UI_GUI_SCENE
-#define UI_GUI_SCENE
+#ifndef UI_GUI_SCENE_H
+#define UI_GUI_SCENE_H
 
 #include "GUI-element.h"
 #include <SFML/Graphics.hpp>
@@ -15,20 +15,23 @@ namespace GUI
 class Scene
 {
 protected:
-    std::vector<std::shared_ptr<BaseElement>> elements;
-    std::vector<std::shared_ptr<IInteractiveElement>> interactableElements;
-    sf::RenderWindow* window;
+    std::vector<std::shared_ptr<sf::Drawable>> elements;
+    std::vector<std::shared_ptr<IInteractableElement>> interactableElements;
 
     template<typename T>
-    requires std::derived_from<T,BaseElement>
+    requires std::derived_from<T,sf::Drawable>
     void addElement(std::shared_ptr<T> element_ptr);
 
+    sf::RenderTarget *target_ptr;
 public:
-    void setupWindow(sf::RenderWindow *window_ptr);
+
+    void handleEvent(const std::optional<sf::Event>& e);
 
     virtual void setup() = 0;
 
-    virtual void draw();
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default);
+
+    void setWindow(sf::RenderTarget *target_ptr);
 };
 
 class DebugScene : public Scene
@@ -39,4 +42,4 @@ public:
 
 }
 
-#endif
+#endif // UI_GUI_SCENE_H

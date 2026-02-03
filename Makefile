@@ -21,4 +21,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 .PHONY: clean
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) app.exe
