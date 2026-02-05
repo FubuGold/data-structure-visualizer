@@ -1,7 +1,7 @@
 #ifndef UI_GUI_SCENE_H
 #define UI_GUI_SCENE_H
 
-#include "GUI-element.h"
+#include "GUI-interactable-element.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
 

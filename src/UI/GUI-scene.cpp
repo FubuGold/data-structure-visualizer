@@ -45,7 +45,7 @@ void Scene::setWindow(sf::RenderTarget *target_ptr)
 
 void DebugScene::setup()
 {
-    std::shared_ptr<RectangleButton<>> button1(new RectangleButton<>(
+    std::shared_ptr<RectangleButton> button1(new RectangleButton(
         {400, 100}, {0,0},
         "This is a button",
         20, 0, 2,

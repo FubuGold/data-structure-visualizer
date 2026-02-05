@@ -2,12 +2,8 @@
 #include <SFML/GpuPreference.hpp>
 SFML_DEFINE_DISCRETE_GPU_PREFERENCE
 
-#include "../include/UI/GUI-element.h"
 #include "../include/UI/GUI-scene.h"
 #include <iostream> // Debug
-
-// Setup the scenes
-void setup();
 
 int main()
 {
@@ -23,10 +19,6 @@ int main()
             {
                 window.close();
             }
-            else if (const sf::Event::MouseMoved *tmp = event->getIf<sf::Event::MouseMoved>())
-            {
-                std::cout << tmp->position.x << ' ' << tmp->position.y << '\n';
-            }
             debugScene.handleEvent(event);
         }
         window.clear(sf::Color::White);
@@ -36,5 +28,3 @@ int main()
         window.display();
     }
 }
-
-void setup() {}
