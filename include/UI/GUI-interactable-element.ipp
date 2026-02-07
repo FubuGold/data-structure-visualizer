@@ -8,7 +8,7 @@
 #include <assert.h>
 
 #include "GUI-interactable-element.h"
-#include "../config/config.h"
+#include "../global/config.h"
 
 namespace GUI
 {

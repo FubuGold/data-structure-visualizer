@@ -1,6 +1,6 @@
 #include "../../include/UI/GUI-element.h"
 
-#include "../../include/config/config.h"
+#include "../../include/global/config.h"
 #include <string>
 
 namespace GUI
