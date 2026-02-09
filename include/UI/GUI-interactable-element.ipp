@@ -181,19 +181,16 @@ bool RectangleButton::containPos(sf::Vector2f pos)
 
 void RectangleButton::handleEvent(const std::optional<sf::Event>& e)
 {
-    if (const sf::Event::MouseMoved *mouse_moved = e->getIf<sf::Event::MouseMoved>())
-    {
+    if (const sf::Event::MouseMoved *mouse_moved = e->getIf<sf::Event::MouseMoved>()) {
         sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_moved->position);
         if (containPos(mouse_pos)) this->hoverIn();
         else this->hoverOut();
     }
-    else if (const sf::Event::MouseButtonPressed *mouse_pressed = e->getIf<sf::Event::MouseButtonPressed>())
-    {
+    else if (const sf::Event::MouseButtonPressed *mouse_pressed = e->getIf<sf::Event::MouseButtonPressed>()) {
         sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_pressed->position);
         if (mouse_pressed->button == sf::Mouse::Button::Left && containPos(mouse_pos)) this->click();
     }
-    else if (const sf::Event::MouseButtonReleased *mouse_released = e->getIf<sf::Event::MouseButtonReleased>())
-    {
+    else if (const sf::Event::MouseButtonReleased *mouse_released = e->getIf<sf::Event::MouseButtonReleased>()) {
         sf::Vector2f mouse_pos = this->target_ptr->mapPixelToCoords(mouse_released->position);
         if (mouse_released->button == sf::Mouse::Button::Left && containPos(mouse_pos)) this->release();
     }
