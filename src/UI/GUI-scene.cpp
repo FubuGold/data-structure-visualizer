@@ -12,24 +12,21 @@ requires std::derived_from<T,sf::Drawable>
 void Scene::addElement(std::shared_ptr<T> element_ptr)
 {
     elements.push_back(std::static_pointer_cast<sf::Drawable>(element_ptr));
-    if constexpr (std::derived_from<T,IInteractableElement>)
-    {
+    if constexpr (std::derived_from<T,IInteractableElement>) {
         interactableElements.push_back(std::static_pointer_cast<IInteractableElement>(element_ptr));
     }
 }
 
 void Scene::handleEvent(const std::optional<sf::Event>& e)
 {
-    for (std::shared_ptr<IInteractableElement> element : interactableElements)
-    {
+    for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->handleEvent(e);
     }
 }
 
 void Scene::draw(sf::RenderTarget& target, sf::RenderStates state)
 {
-    for (std::shared_ptr<sf::Drawable> element : elements)
-    {
+    for (std::shared_ptr<sf::Drawable> element : elements) {
         target.draw(*element,state);
     }
 }
@@ -67,8 +64,7 @@ void DebugScene::setup()
 
 
 
-    for (std::shared_ptr<IInteractableElement> element : interactableElements)
-    {
+    for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->setWindow(target_ptr);
     }
 }
