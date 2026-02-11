@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <utility>
 
 namespace DataStructure
 {
@@ -121,15 +122,18 @@ public:
 
 //======================================================//
 
+// Bidirectional graph
 class Graph
 {
 private:
-    std::vector<std::vector<int>> adj;
+    std::vector<std::vector<std::pair<int,int>>> adj;
+    int n;
 public:
     void setSize(int n);
-    void addEdge(int x,int y);
-    void findMST();
-    void findSP(int x,int y);
+    void addEdge(int x,int y,int w);
+    int findMST();
+    int findSP(int st,int ed);
+    void clear();
 };
 
 };

@@ -1,5 +1,7 @@
 #include "../../include/data-structure/data-structure.h"
 
+#include <queue>
+
 namespace DataStructure
 {
 
@@ -401,6 +403,88 @@ void Trie::remove(std::string s)
 void Trie::clear()
 {
     clearRecur(root);
+}
+
+//======================================================//
+
+void Graph::setSize(int n)
+{
+    this->n = n;
+    adj.assign(n,std::vector<std::pair<int,int>>());
+}
+
+void Graph::addEdge(int x,int y,int w)
+{
+    adj[x].push_back({y,w});
+    adj[y].push_back({x,w});
+}
+
+int Graph::findMST()
+{
+    if (this->n == 0) return -1;
+    
+    std::priority_queue<std::pair<int,int>> pq;
+    std::vector<bool> vst(this->n);
+
+    pq.push({0,0});
+    vst[0] = 1;
+    int cnt = 1, res = 0;
+
+    while (pq.size()) {
+        int u = pq.top().second;
+        int curW = -pq.top().first; 
+        pq.pop();
+        if (vst[u]) continue;
+        cnt++;
+        vst[u] = 1;
+        res += curW;
+        if (cnt == this->n) break;
+        for (std::pair<int,int> &edge : adj[u])
+        {
+            int &v = edge.first, &w = edge.second;
+            if (vst[v]) continue;
+            pq.push({-w,v});
+        }
+    }
+
+    return res;
+}
+
+int Graph::findSP(int st,int ed)
+{
+    if (this->n == 0) return -1;
+    if (st >= this->n || ed >= this->n) return -1;
+    
+    std::priority_queue<std::pair<int,int>> pq;
+    std::vector<int> dis(this->n,-1);
+
+    pq.push({0,st});
+    dis[st] = 0;
+    int cnt = 1, res = 0;
+
+    while (pq.size()) {
+        int u = pq.top().second;
+        int curDis = -pq.top().first; 
+        pq.pop();
+        if (u == ed) return dis[ed];
+        if (dis[u] != -1) continue;
+        cnt++;
+        if (cnt == n) break;
+        for (std::pair<int,int> &edge : adj[u])
+        {
+            int &v = edge.first, &w = edge.second;
+            if (dis[v] != -1) continue;
+            dis[v] = curDis + w;
+            pq.push({-dis[v],v});
+        }
+    }
+    return -1;
+}
+
+void Graph::clear()
+{
+    this->n = 0;
+    adj.clear();
 }
 
 }
