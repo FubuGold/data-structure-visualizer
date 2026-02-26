@@ -43,11 +43,15 @@ protected:
     bool hovered = false;
 
     // This will be called when the mouse is clicked is in the bounding box
+    // This will be called when the mouse is clicked is in the bounding box
     virtual void onClick();
+    // This will be called when the mouse is hovered into the bounding box
     // This will be called when the mouse is hovered into the bounding box
     virtual void onHoverIn();
     // This will be called when the mouse is hovered out of the bounding box
+    // This will be called when the mouse is hovered out of the bounding box
     virtual void onHoverOut();
+    // This will be called when the mouse is released when in the bounding box
     // This will be called when the mouse is released when in the bounding box
     virtual void onRelease();
     
