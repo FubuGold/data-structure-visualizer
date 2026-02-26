@@ -9,6 +9,11 @@ namespace DataStructure
 
 // Singly linked list implementation
 
+SinglyLinkedList::~SinglyLinkedList()
+{
+    this->clear();
+}
+
 void SinglyLinkedList::insert(int x)
 {
     counter++;
@@ -68,6 +73,11 @@ void SinglyLinkedList::clear()
 
 // Heap implementation (using vector)
 
+Heap::~Heap()
+{
+    this->clear();
+}
+
 int Heap::findPa(int x) {
     return (x-1) / 2;
 }
@@ -118,6 +128,11 @@ void Heap::clear()
 //======================================================//
 
 // AVL implementation
+
+AVLTree::~AVLTree()
+{
+    this->clear();
+}
 
 int AVLTree::Node::leftHeight() 
 {
@@ -191,7 +206,7 @@ AVLTree::Node* AVLTree::findMax(Node *cur, int& retVal)
 
 AVLTree::Node* AVLTree::insertRecur(int x,Node *cur)
 {
-    if (cur->val == x) return;
+    if (cur->val == x) return cur;
     if (cur->val < x) {
         if (!cur->ltCh) {
             cur->ltCh = new Node();
@@ -280,68 +295,10 @@ void AVLTree::clear()
 
 // Trie implementation
 
-void Trie::clearRecur(Node *cur)
+Trie::~Trie()
 {
-    for (int i=0;i<CHAR_NUM;i++) {
-        if (cur->ch[i]) clearRecur(cur->ch[i]);
-    }
-    if (cur) delete cur;
+    this->clear();
 }
-bool Trie::removeRecur(std::string &s, int id, Node *cur)
-{
-    if (!cur) return;
-    int c = s[id] - 'a';
-    if (!cur->ch[c]) return false;
-    if (removeRecur(s,id+1,cur->ch[c])) {
-        cur->cnt--;
-        if (!cur->cnt) delete cur;
-        return true;
-    }
-    return false;
-}
-
-void Trie::insert(std::string s)
-{
-    if (!root) {
-        root = new Node();
-        root->id = ++counter;
-    }
-    Node *cur = root;
-    cur->cnt++;
-    for (int i=0;i<s.size();i++) {
-        int c = s[i] - 'a';
-        if (!cur->ch[c]) {
-            cur->ch[c] = new Node();
-            cur->ch[c]->id = ++counter;
-        }
-        cur = cur->ch[i];
-        cur->cnt++;
-    }
-    cur->exist++;
-}
-
-bool Trie::find(std::string s)
-{
-    if (!root) return false;
-    Node *cur = root;
-    for (int i=0;i<s.size();i++) {
-        int c = s[i] - 'a';
-        if (!cur->ch[c]) return false;
-        cur = cur->ch[c];
-    }
-    return cur->exist != 0;
-}
-
-void Trie::remove(std::string s)
-{
-    clearRecur(root);
-    root = nullptr;
-    counter = 0;
-}
-
-//======================================================//
-
-// Trie implementation
 
 void Trie::clearRecur(Node *cur)
 {
@@ -352,7 +309,7 @@ void Trie::clearRecur(Node *cur)
 }
 bool Trie::removeRecur(std::string &s, int id, Node *cur)
 {
-    if (!cur) return;
+    if (!cur) return false;
     int c = s[id] - 'a';
     if (!cur->ch[c]) return false;
     if (removeRecur(s,id+1,cur->ch[c])) {
@@ -406,6 +363,13 @@ void Trie::clear()
 }
 
 //======================================================//
+
+// Graph implementation
+
+Graph::~Graph()
+{
+    this->clear();
+}
 
 void Graph::setSize(int n)
 {

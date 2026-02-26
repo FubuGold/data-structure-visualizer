@@ -14,7 +14,10 @@ class BaseStructure
 {
 protected:
     int counter = 0;
+
 public:
+    virtual ~BaseStructure() = default;
+
     virtual void insert(T x) {};
     virtual bool find(T x) {};
     virtual void remove(T x) {};
@@ -31,6 +34,8 @@ private:
     } *head = nullptr, *tail = nullptr;
 
 public:
+    ~SinglyLinkedList();
+
     void insert(int x) override;
     bool find(int x) override;
     void remove(int x) override;
@@ -47,7 +52,10 @@ private:
     int findLt(int x);
     int findRt(int x);
     void heapify(int id);
+
 public:
+    ~Heap();
+
     void insert(int x) override;
     std::optional<int> getMax();
     void removeMax();
@@ -82,6 +90,8 @@ private:
     void clearRecur(Node *cur);
 
 public:
+    ~AVLTree();
+
     void insert(int x) override;
     bool find(int x) override;
     void remove(int x) override;
@@ -113,6 +123,8 @@ private:
     bool removeRecur(std::string &s, int id, Node *cur);
 
 public:
+    ~Trie();
+
     void insert(std::string s) override;
     bool find(std::string s) override;
     void remove(std::string s) override;
@@ -129,6 +141,8 @@ private:
     std::vector<std::vector<std::pair<int,int>>> adj;
     int n;
 public:
+    ~Graph();
+
     void setSize(int n);
     void addEdge(int x,int y,int w);
     int findMST();

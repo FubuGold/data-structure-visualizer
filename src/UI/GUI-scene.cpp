@@ -43,7 +43,7 @@ void Scene::setWindow(sf::RenderTarget *target_ptr)
 void DebugScene::setup()
 {
     std::shared_ptr<RectangleButton> button1(new RectangleButton(
-        {400, 100}, {0,0},
+        {200, 50}, {300,500},
         "This is a button",
         20, 0, 2,
         sf::Color::Black, sf::Color::White, sf::Color::Blue
@@ -62,7 +62,12 @@ void DebugScene::setup()
         std::cerr << "Hover out detected\n";
     });
 
-
+    std::shared_ptr<InputTextField> textField(new InputTextField(
+        {350, 100}, {600, 100},
+        20, 0, 2,
+        sf::Color::Black, sf::Color::White, sf::Color::Magenta
+    ));
+    addElement(textField);
 
     for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->setWindow(target_ptr);

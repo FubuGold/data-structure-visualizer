@@ -7,7 +7,7 @@ SFML_DEFINE_DISCRETE_GPU_PREFERENCE
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Title", sf::State::Windowed);
+    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Title", sf::State::Windowed);
     GUI::DebugScene debugScene;
     debugScene.setWindow((sf::RenderTarget*)&window);
     debugScene.setup();
