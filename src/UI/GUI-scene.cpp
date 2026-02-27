@@ -29,6 +29,11 @@ void Scene::draw(sf::RenderTarget& target, sf::RenderStates state)
     for (std::shared_ptr<sf::Drawable> element : elements) {
         target.draw(*element,state);
     }
+
+    // Debug
+    for (int i=0;i<debugDots.size();i++) {
+        target.draw(debugDots[i],state);
+    }
 }
 
 void Scene::setWindow(sf::RenderTarget *target_ptr)

@@ -3,6 +3,8 @@
 namespace GUI
 {
 
+std::vector<DebugDot> debugDots;
+
 void IInteractableElement::setWindow(sf::RenderTarget *target_ptr)
 {
     this->target_ptr = target_ptr;

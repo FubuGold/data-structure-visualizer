@@ -44,5 +44,10 @@ void BindableText<std::string>::operator=(const std::string s)
 {
     text.setString(s);
 }
+template<>
+void BindableText<sf::String>::operator=(const sf::String s)
+{
+    text.setString(s);
+}
 
 }
