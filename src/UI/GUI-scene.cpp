@@ -51,7 +51,7 @@ void DebugScene::setup()
         {200, 50}, {300,500},
         "This is a button",
         20, 0, 2,
-        sf::Color::Black, sf::Color::White, sf::Color::Blue
+        sf::Color::White, sf::Color::Blue, sf::Color::Black
     ));
     addElement(button1);
     button1->setClickCallback([](sf::RectangleShape &rect,sf::Text &text){
@@ -67,13 +67,41 @@ void DebugScene::setup()
         std::cerr << "Hover out detected\n";
     });
 
+    std::shared_ptr<ValueText<sf::String>> valueText(new ValueText<sf::String>(
+        {700, 600}
+    ));
+    addElement(valueText);
+
     std::shared_ptr<TextInputField> textField(new TextInputField(
-        {350, 100}, {600, 100},
+        {350, 100}, {600, 50},
         20, 0, 2,
-        sf::Color::Black, sf::Color::White, sf::Color::Magenta
+        sf::Color::White, sf::Color::Magenta, sf::Color::Black
     ));
     addElement(textField);
 
+    std::shared_ptr<RectangleButton> inputEnter(new RectangleButton(
+        {100, 30}, {960, 100},
+        "Enter",
+        20, 0, 2
+    ));
+    inputEnter->setReleaseCallback([textField,valueText](sf::RectangleShape& rect,sf::Text& text){
+        *valueText = textField->getValue();
+    });
+    addElement(inputEnter);
+    
+    std::shared_ptr<Node> nodeTest(new Node(
+        {1000,800},
+        "1",
+        20
+    ));
+    addElement(nodeTest);
+    
+    std::shared_ptr<Edge> edgeTest(new Edge(
+        {340, 750}, {900, 102}, "abc"
+    ));
+    addElement(edgeTest);
+
+    // This must be last
     for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->setWindow(target_ptr);
     }

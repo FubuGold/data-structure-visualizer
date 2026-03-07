@@ -3,8 +3,6 @@
 namespace GUI
 {
 
-std::vector<DebugDot> debugDots;
-
 void IInteractableElement::setWindow(sf::RenderTarget *target_ptr)
 {
     this->target_ptr = target_ptr;
@@ -49,9 +47,9 @@ RectangleButton::RectangleButton(
     int characterSize,
     int textOutline,
     int borderThickness,
-    sf::Color borderColor,
     sf::Color bgColor,
-    sf::Color textColor
+    sf::Color textColor,
+    sf::Color borderColor
   ) : text(Config::font)
 {
     this->rect.setSize(btnSize);
@@ -139,9 +137,9 @@ TextInputField::TextInputField(
     int characterSize,
     int textOutline,
     int borderThickness,
-    sf::Color borderColor,
     sf::Color bgColor,
-    sf::Color textColor
+    sf::Color textColor,
+    sf::Color borderColor
 ) : value(""), focused(0), text(Config::font)
 {
     this->rect.setSize(fieldSize);

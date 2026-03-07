@@ -11,8 +11,6 @@
 namespace GUI
 {
 
-extern std::vector<DebugDot> debugDots;
-
 /**
  * @brief Interface for interactable element
  */
@@ -102,9 +100,9 @@ public:
         int characterSize = 20,
         int textOutline = 0,
         int borderThickness = 2,
-        sf::Color borderColor = sf::Color::Black,
         sf::Color bgColor = sf::Color::White,
-        sf::Color textColor = sf::Color::Black
+        sf::Color textColor = sf::Color::Black,
+        sf::Color borderColor = sf::Color::Black
     );
     ~RectangleButton() = default;
     
@@ -145,9 +143,9 @@ public:
         int characterSize = 20,
         int textOutline = 0,
         int borderThickness = 2,
-        sf::Color borderColor = sf::Color::Black,
         sf::Color bgColor = sf::Color::White,
-        sf::Color textColor = sf::Color::Black
+        sf::Color textColor = sf::Color::Black,
+        sf::Color borderColor = sf::Color::Black
     );
     ~TextInputField() = default;
 
