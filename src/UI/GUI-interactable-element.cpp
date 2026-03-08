@@ -120,10 +120,10 @@ void TextInputField::updateValue(char32_t chr)
 {
     // Backspace
     if (chr == 8) {
-        if (value.getSize()) value.erase(value.getSize()-1);
+        if (value.size()) value.erase(value.size()-1);
     }
     else if (!this->filter || this->filter(chr)) {
-        value.insert(value.getSize(), sf::String(chr));
+        value.insert(value.size(), sf::String(chr));
     }
 
     text.setString(value);

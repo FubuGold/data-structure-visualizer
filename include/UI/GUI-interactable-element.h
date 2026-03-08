@@ -122,7 +122,7 @@ using inputFieldFilterCb_t = std::function<bool(char32_t)>;
 class TextInputField : public InteractableElement<std::function<void()>>
 {
 protected:
-    sf::String value;
+    std::string value;
     sf::Text text;
     sf::RectangleShape rect;
     bool focused;
