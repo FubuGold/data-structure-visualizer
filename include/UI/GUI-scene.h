@@ -3,6 +3,7 @@
 
 #include "GUI-interactable-element.h"
 #include "GUI-element.h"
+#include "GUI-visual-handler.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
 
