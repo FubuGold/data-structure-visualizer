@@ -1,0 +1,6 @@
+#ifndef DATA_STRUCTURE_TEST
+#define DATA_STRUCTURE_TEST
+
+void avlTest();
+
+#endif // DATA_STRUCTURE_TEST

@@ -1,9 +1,21 @@
 #include "../../include/data-structure/data-structure.h"
 
 #include <queue>
+#include <iostream> // For debug
 
 namespace DataStructure
 {
+
+void BaseStructure::linkSnapshot(std::vector<Global::TreeStructure> *snapshot_ptr)
+{
+    this->snapshot_ptr = snapshot_ptr;
+}
+
+void BaseStructure::clearSnapshot()
+{
+    if (!snapshot_ptr) return;
+    snapshot_ptr->clear();
+}
 
 //======================================================//
 
@@ -38,15 +50,15 @@ bool SinglyLinkedList::find(int x)
     return false;
 }
 
-void SinglyLinkedList::remove(int x)
+bool SinglyLinkedList::remove(int x)
 {
-    if (!head) return;
+    if (!head) return false;
     if (head->val == x) {
         Node *tmp = head;
         head = head->pNext;
         delete tmp;
         if (!head) tail = nullptr;
-        return;
+        return true;
     }
     for (Node *ptr = head; ptr->pNext; ptr = ptr->pNext) {
         if (ptr->pNext->val = x) {
@@ -54,8 +66,10 @@ void SinglyLinkedList::remove(int x)
             ptr->pNext = ptr->pNext->pNext;
             delete tmp;
             if (tail == tmp) tail = ptr;
+            return true;
         }
     }
+    return false;
 }
 
 void SinglyLinkedList::clear()
@@ -134,6 +148,28 @@ AVLTree::~AVLTree()
     this->clear();
 }
 
+void AVLTree::createSnapshotRecur(Node *cur, Global::TreeStructure &structure)
+{
+    if (!cur) return;
+    // std::cerr << "Recur called\n";
+    structure.valueMap[cur->id] = std::to_string(cur->val);
+    int ltId = cur->ltCh ? cur->ltCh->id : -1;
+    int rtId = cur->rtCh ? cur->rtCh->id : -1;
+    structure.structureMap[cur->id] = std::make_tuple(ltId,rtId,cur->ishighlighted);
+    
+    createSnapshotRecur(cur->ltCh, structure);
+    createSnapshotRecur(cur->rtCh, structure);
+}
+
+void AVLTree::createSnapshot()
+{
+    snapshot_ptr->push_back(Global::TreeStructure());
+    createSnapshotRecur(root, snapshot_ptr->back());
+    snapshot_ptr->back().rootId = root ? root->id : -1;
+
+    std::cerr << "AVL snapshot created\n";
+}
+
 int AVLTree::Node::leftHeight() 
 {
     return ltCh ? ltCh->height : 0;
@@ -147,9 +183,9 @@ void AVLTree::recalHeight(Node *cur)
     cur->height = std::max(cur->leftHeight(),cur->rightHeight()) + 1;
 }
 
-AVLTree::Node* AVLTree::leftRotate(Node *cur)
+void AVLTree::leftRotate(Node *&cur)
 {
-    if (!cur->rtCh) return cur;
+    if (!cur->rtCh) return;
     Node *res = cur->rtCh;
     Node *tmp = cur->rtCh->ltCh;
 
@@ -159,11 +195,13 @@ AVLTree::Node* AVLTree::leftRotate(Node *cur)
     recalHeight(cur);
     recalHeight(res);
 
-    return res;
+    cur = res;
+
+    createSnapshot();
 }
-AVLTree::Node* AVLTree::rightRotate(Node *cur)
+void AVLTree::rightRotate(Node *&cur)
 {
-    if (!cur->ltCh) return cur;
+    if (!cur->ltCh) return;
     Node *res = cur->ltCh;
     Node *tmp = cur->ltCh->rtCh;
 
@@ -173,193 +211,174 @@ AVLTree::Node* AVLTree::rightRotate(Node *cur)
     recalHeight(cur);
     recalHeight(res);
 
-    return res;
+    cur = res;
+
+    createSnapshot();
+
+    return;
 }
 
-AVLTree::Node* AVLTree::balancing(Node *cur)
+void AVLTree::balancing(Node *&cur)
 {
     recalHeight(cur);
     int ltH = cur->leftHeight(), rtH = cur->rightHeight();
-    if (ltH - rtH >= -1 && ltH - rtH <= 1) return cur;
+    std::cerr << "Balancing: " << cur->id << ' ' << ltH << ' ' << rtH << '\n';
+    if (ltH - rtH >= -1 && ltH - rtH <= 1) return;
+
+    std::cerr << "Balancing called \n";
+
     if (ltH > rtH) {
-        if (cur->ltCh->leftHeight() <= cur->rtCh->rightHeight()) 
-            cur->ltCh = leftRotate(cur->ltCh);
+        std::cerr << "Left unbalanced\n";
+        if (cur->ltCh->leftHeight() <= cur->ltCh->rightHeight()) 
+            leftRotate(cur->ltCh);
         return rightRotate(cur);
     }
     else {
-        if (cur->ltCh->leftHeight() >= cur->rtCh->rightHeight()) 
-            cur->rtCh = rightRotate(cur->rtCh);
+        std::cerr << "Right unbalanced" << '\n';
+        if (cur->rtCh->leftHeight() >= cur->rtCh->rightHeight()) 
+            rightRotate(cur->rtCh);
         return leftRotate(cur);
     }
 }
-AVLTree::Node* AVLTree::findMax(Node *cur, int& retVal)
+void AVLTree::findMax(Node *&cur, int& retVal)
 {
     if (cur->rtCh) {
-        cur->rtCh = findMax(cur->rtCh, retVal);
-        return cur;
+        findMax(cur->rtCh, retVal);
+        return;
     }
     retVal = cur->val;
-    Node *tmp = cur->rtCh;
+    Node *tmp = cur->ltCh;
     delete cur;
-    return tmp;
+    cur = tmp;
+    return;
 }
 
-AVLTree::Node* AVLTree::insertRecur(int x,Node *cur)
+void AVLTree::insertRecur(int x,Node *&cur)
 {
-    if (cur->val == x) return cur;
-    if (cur->val < x) {
+    std::cerr << x << '\n';
+    if (!cur) {
+        cur = new Node();
+        cur->id = counter;
+        cur->val = x;
+
+        createSnapshot();
+        return;
+    }
+    std::cerr << "Current id: " << cur->id << '\n';
+    cur->ishighlighted = true;
+    if (cur->val == x) {
+        counter--;
+        cur->ishighlighted = false;
+        createSnapshot();
+        return;
+    }
+
+    if (x < cur->val) {
         if (!cur->ltCh) {
+            // std::cerr << "whyyyyyyyy\n";
             cur->ltCh = new Node();
-            cur->id = counter;
-            cur->val = x;
+            cur->ltCh->id = counter;
+            cur->ltCh->val = x;
+            
+            // std::cerr << "2 whyyyyyyyy\n";
+            createSnapshot();
+            // std::cerr << "3 whyyyyyyyy\n";
         }
         else {
-            cur->ltCh = insertRecur(x,cur->ltCh);
+            // std::cerr << "whyyyyyyyy\n";
+            insertRecur(x,cur->ltCh);
         }
     }
     else {
         if (!cur->rtCh) {
             cur->rtCh = new Node();
-            cur->id = counter;
-            cur->val = x;
+            cur->rtCh->id = counter;
+            cur->rtCh->val = x;
+
+            createSnapshot();
         }
         else {
-            cur->rtCh = insertRecur(x,cur->rtCh);
+            insertRecur(x,cur->rtCh);
         }
     }
-    return balancing(cur);
+    cur->ishighlighted = false;
+    balancing(cur);
+    createSnapshot();
+    std::cerr << "Insert recur " << cur->id << " end\n";
+    return;
 }
 
-AVLTree::Node* AVLTree::removeRecur(int x,Node *cur)
+void AVLTree::removeRecur(int x,Node *&cur)
 {
-    if (cur->val < x) {
-        cur->ltCh = removeRecur(x, cur->ltCh);
+    if (x < cur->val) {
+        removeRecur(x, cur->ltCh);
     }
-    else if (cur->val > x) {
-        cur->rtCh = removeRecur(x,cur->rtCh);
+    else if (x > cur->val) {
+        removeRecur(x,cur->rtCh);
     }
     else {
         if (!cur->ltCh) {
             Node *tmp = cur->rtCh;
             delete cur;
-            return tmp;
+            cur = tmp;
+            return;
         }
         else if (!cur->rtCh) {
             Node *tmp = cur->ltCh;
             delete cur;
-            return tmp;
+            cur = tmp;
+            return;
         }
         else {
             int tmpVal = INT_MIN;
-            cur->ltCh = findMax(cur->ltCh,tmpVal);
+            findMax(cur->ltCh,tmpVal);
             cur->val = tmpVal;
         }
     }
 
-    return balancing(cur);
+    balancing(cur);
 }
 
 void AVLTree::clearRecur(Node *cur) {
+    if (!cur) return;
     if (cur->ltCh) clearRecur(cur->ltCh);
     if (cur->rtCh) clearRecur(cur->rtCh);
-    if (cur) delete cur;
+    delete cur;
 }
 
 void AVLTree::insert(int x)
 {
+    std::cerr << "AVL insert called\n";
     counter++;
-    root = insertRecur(x,root);
+    insertRecur(x,root);
+    std::cerr << "AVL insert end\n";
 }
 bool AVLTree::find(int x)
 {
     Node *cur = root;
+    std::cerr << "Find begin " << x << '\n';
     while (cur) {
+        std::cerr << cur->val << '\n';
         if (cur->val == x) return true;
-        if (cur->val < x) cur = cur->ltCh;
+        if (x < cur->val) cur = cur->ltCh;
         else cur = cur->rtCh;
     }
+    std::cerr << "Find end\n";
     return false;
 }
-void AVLTree::remove(int x)
+bool AVLTree::remove(int x)
 {
-    root = removeRecur(x,root);
+    if (find(x)) {
+        removeRecur(x,root);
+        return true;
+    }
+    return false;
 }
 void AVLTree::clear()
 {
     clearRecur(root);
     root = nullptr;
     counter = 0;
-}
-
-//======================================================//
-
-// Trie implementation
-
-Trie::~Trie()
-{
-    this->clear();
-}
-
-void Trie::clearRecur(Node *cur)
-{
-    for (int i=0;i<CHAR_NUM;i++) {
-        if (cur->ch[i]) clearRecur(cur->ch[i]);
-    }
-    if (cur) delete cur;
-}
-bool Trie::removeRecur(std::string &s, int id, Node *cur)
-{
-    if (!cur) return false;
-    int c = s[id] - 'a';
-    if (!cur->ch[c]) return false;
-    if (removeRecur(s,id+1,cur->ch[c])) {
-        cur->cnt--;
-        if (!cur->cnt) delete cur;
-        return true;
-    }
-    return false;
-}
-
-void Trie::insert(std::string s)
-{
-    if (!root) {
-        root = new Node();
-        root->id = ++counter;
-    }
-    Node *cur = root;
-    cur->cnt++;
-    for (int i=0;i<s.size();i++) {
-        int c = s[i] - 'a';
-        if (!cur->ch[c]) {
-            cur->ch[c] = new Node();
-            cur->ch[c]->id = ++counter;
-        }
-        cur = cur->ch[i];
-        cur->cnt++;
-    }
-    cur->exist++;
-}
-
-bool Trie::find(std::string s)
-{
-    if (!root) return false;
-    Node *cur = root;
-    for (int i=0;i<s.size();i++) {
-        int c = s[i] - 'a';
-        if (!cur->ch[c]) return false;
-        cur = cur->ch[c];
-    }
-    return cur->exist != 0;
-}
-
-void Trie::remove(std::string s)
-{
-    removeRecur(s,0,root);
-}
-
-void Trie::clear()
-{
-    clearRecur(root);
 }
 
 //======================================================//

@@ -1,6 +1,6 @@
 #include "../../include/UI/GUI-element.h"
 
-#include "../../include/global/config.h"
+#include "../../include/global/global.h"
 #include <string>
 #include <math.h>
 #include <iostream>
@@ -14,11 +14,12 @@ std::vector<DebugDot> debugDots;
 
 // Debug Dot implementation
 
-DebugDot::DebugDot(sf::Vector2f pos)
+DebugDot::DebugDot(sf::Vector2f pos, sf::Color color)
 {
+    dot.setOrigin(dot.getLocalBounds().position + dot.getLocalBounds().size * 0.5f);
     dot.setPosition(pos);
     dot.setRadius(2);
-    dot.setFillColor(sf::Color::Red);
+    dot.setFillColor(color);
 }
 
 void DebugDot::draw(sf::RenderTarget& target, sf::RenderStates state) const
@@ -59,21 +60,32 @@ Node::Node(
     int borderThickness,
     sf::Color bgColor,
     sf::Color textColor,
-    sf::Color borderColor
-) : text(Config::font)
+    sf::Color borderColor,
+    sf::Color highlightColor
+) : text(Global::font)
 {
+    this->pos = pos;
+
     this->circle.setRadius(radius);
     this->circle.setOrigin(this->circle.getLocalBounds().position + this->circle.getLocalBounds().size * 0.5f);
     this->circle.setOutlineThickness(borderThickness);
     this->circle.setOutlineColor(borderColor);
     this->circle.setFillColor(bgColor);
-    
+
+    this->highlightOutline.setRadius(radius+2);
+    this->highlightOutline.setOrigin(this->highlightOutline.getLocalBounds().position + this->highlightOutline.getLocalBounds().size * 0.5f);
+    this->highlightOutline.setOutlineThickness(borderThickness);
+    this->highlightOutline.setOutlineColor(borderColor);
+    this->highlightOutline.setFillColor(sf::Color(0,0,0,0));
+
     this->text.setCharacterSize(characterSize);
     this->text.setString(text);
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
     this->text.setFillColor(textColor);
 
+    
     this->circle.setPosition(pos);
+    this->highlightOutline.setPosition(pos);
     this->text.setPosition(pos);
 }
 
@@ -81,12 +93,14 @@ void Node::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
     target.draw(this->circle, state);
     target.draw(this->text, state);
+    if (this->isHighlighted) target.draw(this->highlightOutline);
 }
 
 void Node::setPos(sf::Vector2f newPos)
 {
     this->circle.setPosition(newPos);
     this->text.setPosition(newPos);
+    this->highlightOutline.setPosition(newPos);
 }
 
 std::string Node::getValue()
@@ -96,12 +110,20 @@ std::string Node::getValue()
 
 void Node::setValue(std::string value)
 {
+    // std::cerr << "Set value called\n";
     this->text.setString(value);
+    this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
+    this->text.setPosition(this->circle.getPosition());
 }
 
 sf::Vector2f Node::getPos()
 {
     return this->circle.getPosition();
+}
+
+void Node::setHighlighted(bool value)
+{
+    isHighlighted = value;
 }
 
 //======================================================//
@@ -118,7 +140,7 @@ Line::Line(
     sf::Color lineColor,
     sf::Color textColor,
     sf::Color textOutlineColor
-) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Config::font)
+) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Global::font)
 {
     this->line.setFillColor(lineColor);
     this->line.setOrigin({0,this->line.getLocalBounds().position.y + lineThickness * 0.5f});

@@ -5,32 +5,43 @@
 #include <string>
 #include <optional>
 #include <utility>
+#include <map>
+
+#include "../global/global.h"
 
 namespace DataStructure
 {
 
-template<typename T>
 class BaseStructure
 {
 protected:
     int counter = 0;
 
+    std::vector<Global::TreeStructure> *snapshot_ptr = nullptr;
+
 public:
     virtual ~BaseStructure() = default;
 
-    virtual void insert(T x) {};
-    virtual bool find(T x) {};
-    virtual void remove(T x) {};
+    virtual void insert(int x) {};
+    virtual bool find(int x) {};
+    virtual bool remove(int x) {};
     virtual void clear() {};
+
+    virtual void createSnapshot() {};
+
+    // Does not unlink the snapshot list
+    void clearSnapshot();
+    void linkSnapshot(std::vector<Global::TreeStructure> *snapshot_ptr);
 };
 
-class SinglyLinkedList : public BaseStructure<int>
+class SinglyLinkedList : public BaseStructure
 {
 private:
     struct Node
     {
         Node *pNext = nullptr;
         int id,val;
+        bool ishighlighted;
     } *head = nullptr, *tail = nullptr;
 
 public:
@@ -38,13 +49,13 @@ public:
 
     void insert(int x) override;
     bool find(int x) override;
-    void remove(int x) override;
+    bool remove(int x) override;
     void clear() override;
 
 };
 
 // Max heap
-class Heap : public BaseStructure<int>
+class Heap : public BaseStructure
 {
 private:
     std::vector<int> vec;
@@ -63,71 +74,41 @@ public:
 
 };
 
-class AVLTree : public BaseStructure<int>
+class AVLTree : public BaseStructure
 {
 private:
     struct Node
     {
         Node *ltCh = nullptr, *rtCh = nullptr;
-        int height = 0;
+        int height = 1;
         int id,val;
+        bool ishighlighted = 0;
         inline int leftHeight();
         inline int rightHeight();
     } *root = nullptr;
 
     void recalHeight(Node *cur);
-    // Return the new current
-    Node* leftRotate(Node *cur);
-    // Return the new current
-    Node* rightRotate(Node *cur);
-    // Return the new current. Include recalHeight at the start
-    Node* balancing(Node *cur);
+    void leftRotate(Node *&cur);
+    void rightRotate(Node *&cur);
+    // Include recalHeight at the start
+    void balancing(Node *&cur);
 
     // Get the max and delete node, with reconecting
-    Node* findMax(Node *cur, int& retVal);
-    Node* insertRecur(int x,Node *cur);
-    Node* removeRecur(int x,Node *cur);
+    void findMax(Node *&cur, int& retVal);
+    void insertRecur(int x,Node *&cur);
+    void removeRecur(int x,Node *&cur);
     void clearRecur(Node *cur);
+
+    void createSnapshotRecur(Node *cur, Global::TreeStructure &structure);
 
 public:
     ~AVLTree();
 
+    void createSnapshot() override;
+
     void insert(int x) override;
     bool find(int x) override;
-    void remove(int x) override;
-    void clear() override;
-
-};
-
-/**
- * @brief Trie for storing string
- * 
- * Note 1: Only from 'a' to 'z'
- * 
- * Node 2: This use copy, not reference or move
- * 
- */
-class Trie : BaseStructure<std::string>
-{
-private:
-    static const int CHAR_NUM = 26;
-    struct Node
-    {
-        Node *ch[CHAR_NUM];
-        int cnt = 0;
-        int exist = 0;
-        int id;
-    } *root = nullptr;
-    
-    void clearRecur(Node *cur);
-    bool removeRecur(std::string &s, int id, Node *cur);
-
-public:
-    ~Trie();
-
-    void insert(std::string s) override;
-    bool find(std::string s) override;
-    void remove(std::string s) override;
+    bool remove(int x) override;
     void clear() override;
 
 };

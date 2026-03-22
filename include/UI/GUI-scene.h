@@ -4,6 +4,7 @@
 #include "GUI-interactable-element.h"
 #include "GUI-element.h"
 #include "GUI-visual-handler.h"
+#include "../data-structure/data-structure-handler.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
 
@@ -25,21 +26,30 @@ protected:
     void addElement(std::shared_ptr<T> element_ptr);
 
     sf::RenderTarget *target_ptr;
-public:
-
-    void handleEvent(const std::optional<sf::Event>& e);
-
+    
+    public:
+    
+void handleEvent(const std::optional<sf::Event>& e);
+    
     virtual void setup() = 0;
-
     virtual void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default);
+
+    virtual void loopUpdate() {}
 
     void setWindow(sf::RenderTarget *target_ptr);
 };
 
 class DebugScene : public Scene
 {
+protected:
+
+    std::shared_ptr<GUI::TreeVisualHandler> avl;
+    AVLTreeHandler avlHandler;    
+
 public:
     void setup() override;
+
+    void loopUpdate() override;
 };
 
 }

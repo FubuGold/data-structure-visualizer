@@ -50,7 +50,7 @@ RectangleButton::RectangleButton(
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor
-  ) : text(Config::font)
+  ) : text(Global::font)
 {
     this->rect.setSize(btnSize);
 
@@ -140,7 +140,7 @@ TextInputField::TextInputField(
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor
-) : value(""), focused(0), text(Config::font)
+) : value(""), focused(0), text(Global::font)
 {
     this->rect.setSize(fieldSize);
 
@@ -189,7 +189,10 @@ void TextInputField::handleEvent(const std::optional<sf::Event>& e)
     }
     else if (const sf::Event::MouseButtonPressed *mousePressed = e->getIf<sf::Event::MouseButtonPressed>()) {
         sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mousePressed->position);
-        if (mousePressed->button == sf::Mouse::Button::Left && containPos(mousePos)) this->click();
+        if (mousePressed->button == sf::Mouse::Button::Left) {
+            if (containPos(mousePos)) this->click();
+            else this->focused = 0;
+        }
     }
     else if (const sf::Event::MouseButtonReleased *mouseReleased = e->getIf<sf::Event::MouseButtonReleased>()) {
         sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseReleased->position);

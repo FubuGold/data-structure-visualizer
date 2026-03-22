@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <map>
-#include "../global/config.h"
+#include "../global/global.h"
 
 namespace GUI
 {
@@ -22,7 +22,7 @@ protected:
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
 public:
-    DebugDot(sf::Vector2f pos);
+    DebugDot(sf::Vector2f pos, sf::Color color = sf::Color::Red);
 };
 
 extern std::vector<DebugDot> debugDots;
@@ -64,7 +64,12 @@ class Node : public sf::Drawable, public sf::Transformable
 {
 protected:
     sf::CircleShape circle;
+    sf::CircleShape highlightOutline;
     sf::Text text;
+
+    sf::Vector2f pos;
+
+    bool isHighlighted;
 
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
@@ -77,9 +82,10 @@ public:
         int characterSize = 15,
         int textOutline = 0,
         int borderThickness = 0,
-        sf::Color bgColor = sf::Color(0,200,0),
+        sf::Color bgColor = sf::Color(0,250,0),
         sf::Color textColor = sf::Color::Black,
-        sf::Color borderColor = sf::Color::Black
+        sf::Color borderColor = sf::Color::Black,
+        sf::Color highlightedColor = sf::Color::Red
     );
     ~Node() = default;
 
@@ -87,6 +93,7 @@ public:
     std::string getValue();
     void setValue(std::string value);
     sf::Vector2f getPos();
+    void setHighlighted(bool value);
 };
 
 //======================================================//

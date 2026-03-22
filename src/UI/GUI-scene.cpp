@@ -1,6 +1,16 @@
 #include "../../include/UI/GUI-scene.h"
 
 #include <iostream>
+#include <string>
+
+int stringToInt(std::string s)
+{
+    int x = 0;
+    for (int i=0;i<s.size();i++) {
+        x = x * 10 + s[i] - '0';
+    }
+    return x;
+}
 
 namespace GUI
 {
@@ -67,8 +77,10 @@ void DebugScene::setup()
     //     std::cerr << "Hover out detected\n";
     // });
 
-    std::shared_ptr<TreeHandler> tree(new TreeHandler({900, 600}, {100, 300}));
-    addElement(tree);
+    this->avl = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{800, 500}, sf::Vector2f{50, 200});
+    addElement(avl);
+
+    avlHandler.setVisualizer(this->avl);
 
     // std::shared_ptr<ValueText<sf::String>> valueText(new ValueText<sf::String>(
     //     {700, 600}
@@ -76,7 +88,7 @@ void DebugScene::setup()
     // addElement(valueText);
 
     std::shared_ptr<TextInputField> textField(new TextInputField(
-        {350, 50}, {600, 50},
+        {100, 20}, {100, 50},
         20, 0, 2,
         sf::Color::White, sf::Color::Magenta, sf::Color::Black
     ));
@@ -85,18 +97,63 @@ void DebugScene::setup()
     static int cnt = 0;
 
     std::shared_ptr<RectangleButton> inputEnter(new RectangleButton(
-        {100, 30}, {960, 50},
+        {100, 20}, {220, 50},
         "Enter",
         20, 0, 2
     ));
-    inputEnter->setReleaseCallback([textField, tree](sf::RectangleShape& rect,sf::Text& text) {
-        int pa = cnt ? (cnt-1) / 2 : -1;
-        tree->insert(cnt,pa,(pa * 2 + 1) == cnt,textField->getValue());
-        
-        cnt++;
+    inputEnter->setReleaseCallback([textField, this](sf::RectangleShape& rect,sf::Text& text) {
+        std::cerr << "Input registered\n";
+        int x = stringToInt(textField->getValue());
+        std::cerr << "Input processed\n";
+        avlHandler.insert(x);
     });
     addElement(inputEnter);
-    
+
+    // std::shared_ptr<TextInputField> idField1(new TextInputField(
+    //     {100, 20}, {450, 50},
+    //     20, 0, 2,
+    //     sf::Color::White, sf::Color::Magenta, sf::Color::Black
+    // ));
+    // idField1->setClickCallback([](){
+    //     std::cerr << "ID field clicked : 1\n";
+    // });
+    // idField1->setHoverInCallback([](){
+    //     std::cerr << "ID field hovered in : 1\n";
+    // });
+    // idField1->setHoverOutCallback([](){
+    //     std::cerr << "ID field hovered out : 1\n";
+    // });
+    // addElement(idField1);
+
+    // std::shared_ptr<TextInputField> idField2(new TextInputField(
+    //     {100, 20}, {450, 70},
+    //     20, 0, 2,
+    //     sf::Color::White, sf::Color::Magenta, sf::Color::Black
+    // ));
+    // idField2->setClickCallback([](){
+    //     std::cerr << "ID field clicked : 2\n";
+    // });
+    // idField2->setHoverInCallback([](){
+    //     std::cerr << "ID field hovered in : 2\n";
+    // });
+    // idField2->setHoverOutCallback([](){
+    //     std::cerr << "ID field hovered out : 2\n";
+    // });
+    // addElement(idField2);
+
+    // std::shared_ptr<RectangleButton> idEnter(new RectangleButton(
+    //     {100, 20}, {570, 60},
+    //     "Enter",
+    //     20, 0, 2
+    // ));
+    // idEnter->setReleaseCallback([idField1, idField2, this](sf::RectangleShape& rect,sf::Text& text) {
+    //     int id1 = std::stoi( std::string(idField1->getValue()) );
+    //     int id2 = std::stoi( std::string(idField2->getValue()) );
+        
+    //     avl->swap(id1,id2);
+    // });
+    // addElement(idEnter);
+
     // std::shared_ptr<Node> nodeTest(new Node(
     //     {1000,800},
     //     "1",
@@ -109,10 +166,30 @@ void DebugScene::setup()
     // ));
     // addElement(edgeTest);
 
+    std::shared_ptr<RectangleButton> clearButton(new RectangleButton(
+        {100, 20}, {950, 600},
+        "Clear",
+        20, 0, 2
+    ));
+    clearButton->setReleaseCallback([this](sf::RectangleShape& rect,sf::Text& text) {
+        avlHandler.clear();
+    });
+    addElement(clearButton);
+
     // This must be last
     for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->setWindow(target_ptr);
     }
+    
+    std::cerr << "Setup completed\n";
+}
+
+void DebugScene::loopUpdate()
+{
+    // std::cerr << "======================================================" << '\n';
+    // std::cerr << "Update run\n";
+    this->avlHandler.loop();
+    // std::cerr << "Update end\n";
 }
 
 }

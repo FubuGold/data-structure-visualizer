@@ -1,3 +1,5 @@
+#ifndef GUI_VISUAL_HANDLER
+#define GUI_VISUAL_HANDLER
 #include "GUI-element.h"
 #include "GUI-interactable-element.h"
 
@@ -6,23 +8,50 @@ namespace GUI
 
 //======================================================//
 
+class Animation
+{
+protected:
+    sf::Vector2f vectorVel; // (pixel / s)
+    const float defaultDuration = 0.5;
+
+    float duration = 0;
+    sf::Vector2f startPos, endPos;
+    Node *object;
+
+    sf::Angle angle;
+
+public:
+
+    bool isDone();
+    void play(Node *object, sf::Vector2f startPos, sf::Vector2f endPos);
+    void update();
+    void end();
+
+};
+
+
+//======================================================//
+
 /**
  * @brief Node and edge handler for tree
  * 
- * This does not support trie
  * 
  */
-class TreeHandler : public sf::Drawable, public sf::Transformable
+class TreeVisualHandler : public sf::Drawable, public sf::Transformable
 {
 protected:
+    static constexpr float nodeRadius = 20;
+    static constexpr float padding = 10;
+    static constexpr float offsetUp = 0.2;
+
     class TreeNode : public Node
     {
     public:
         using Node::Node;
         using Node::getPos;
-        TreeNode() : Node({0,0}) {};
+        TreeNode() : Node({0,0},"",nodeRadius) {};
         int paId = -1;
-        int layer = -1;
+        int height = -1;
         int leftCh = -1, rightCh = -1;
     };
     class TreeEdge : public Line
@@ -34,69 +63,51 @@ protected:
     };
 
     std::map<int,TreeNode> nodeList;
-    std::map<int,TreeEdge> edgeList;
-    std::map<int,int> layerNodeCnt;
-    
+
     sf::RectangleShape background;
 
     sf::Vector2f pos, size;
 
-    const int nodeRadius = 20;
-    const float offsetUp = 0.2;
     float centerLine;
     float startY, stepY;
 
-    int curLayer = 0;
+    int curTreeHeight = 0;
 
+    int root = 0;
+    
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
+    void recalHeightRecur(int id,int heigth = 0);
+    void recalHeight();
     void recalPos(int id,int cnt = 1);
+
+    std::vector<Line> lineList;
+    std::vector<Animation*> animationList;
+    void recalLine();
 
 public:
     // The position is at the top left conner ({0,0})
-    TreeHandler(
+    TreeVisualHandler(
         sf::Vector2f size,
         sf::Vector2f pos,
-        int numLayer = 6
+        int numHeight = 6
     );
-    ~TreeHandler() = default;
+    ~TreeVisualHandler() = default;
 
-    void insert(int id, int pa, bool left, std::string value);
-    // This will ONLY remove the node and all associated edge. Only work for leaves
-    void remove(int id);
-    void swapValue(int id1,int id2);
-    // Only recal if this is the last update in the sequence
-    void updateChild(int id,int leftId,int rightId, bool recal = true);
+    void setTreeStructure(Global::TreeStructure &newStructure);
+
+    void updateAnimation();
+
+    void endAnimation();
+
+    bool isAnimationEnd();
+
     void clear();
 
-};
-
-enum class TreeCmdType
-{
-    Insert,
-    Remove,
-    SwapValue,
-    UpdateChild,
-    Clear
-};
-
-struct TreeCmd
-{
-    TreeCmdType type;
-
-    int id;
-    int pa;
-    bool left;
-
-    // For swap value
-    int id2;
-
-    int leftId;
-    int rightId;
-
-    std::string value;
 };
 
 //======================================================//
 
 }
+
+#endif // GUI_VISUAL_HANDLER
