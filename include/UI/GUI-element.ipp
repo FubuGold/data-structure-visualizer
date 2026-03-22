@@ -1,7 +1,7 @@
 // Bindable Text implementation
 
 #include <SFML/Graphics.hpp>
-#include "../global/config.h"
+#include "../global/global.h"
 
 namespace GUI
 {
@@ -16,7 +16,7 @@ ValueText<T>::ValueText(
     int characterSize,
     int textOutline,
     sf::Color textColor
-) : text(Config::font)
+) : text(Global::font)
 {
     text.setPosition(pos);
     text.setCharacterSize(characterSize);
