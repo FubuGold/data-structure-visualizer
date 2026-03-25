@@ -23,7 +23,7 @@ private:
 
     int curSnapshot = 0;
 
-    const float DELAY_TIME = 0.4f; // seconds
+    const float DELAY_TIME = 0.3f; // seconds
     bool delaying = 0;
     sf::Clock delayClock;
 

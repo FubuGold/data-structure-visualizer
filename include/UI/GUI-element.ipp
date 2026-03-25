@@ -16,7 +16,7 @@ ValueText<T>::ValueText(
     int characterSize,
     int textOutline,
     sf::Color textColor
-) : text(Global::font)
+) : text(Global::textFont)
 {
     text.setPosition(pos);
     text.setCharacterSize(characterSize);

@@ -82,6 +82,7 @@ public:
         int characterSize = 15,
         int textOutline = 0,
         int borderThickness = 0,
+        int highlightThickness = 0,
         sf::Color bgColor = sf::Color(0,250,0),
         sf::Color textColor = sf::Color::Black,
         sf::Color borderColor = sf::Color::Black,

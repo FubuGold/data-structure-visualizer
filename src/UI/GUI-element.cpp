@@ -58,11 +58,12 @@ Node::Node(
     int characterSize,
     int textOutline,
     int borderThickness,
+    int highlightThickness,
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor,
     sf::Color highlightColor
-) : text(Global::font)
+) : text(Global::numberFont)
 {
     this->pos = pos;
 
@@ -74,8 +75,8 @@ Node::Node(
 
     this->highlightOutline.setRadius(radius+2);
     this->highlightOutline.setOrigin(this->highlightOutline.getLocalBounds().position + this->highlightOutline.getLocalBounds().size * 0.5f);
-    this->highlightOutline.setOutlineThickness(borderThickness);
-    this->highlightOutline.setOutlineColor(borderColor);
+    this->highlightOutline.setOutlineThickness(highlightThickness);
+    this->highlightOutline.setOutlineColor(highlightColor);
     this->highlightOutline.setFillColor(sf::Color(0,0,0,0));
 
     this->text.setCharacterSize(characterSize);
@@ -140,7 +141,7 @@ Line::Line(
     sf::Color lineColor,
     sf::Color textColor,
     sf::Color textOutlineColor
-) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Global::font)
+) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Global::numberFont)
 {
     this->line.setFillColor(lineColor);
     this->line.setOrigin({0,this->line.getLocalBounds().position.y + lineThickness * 0.5f});

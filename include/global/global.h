@@ -10,7 +10,8 @@ namespace Global
 inline float deltaTime;
 inline sf::Clock deltaClock;
 
-inline sf::Font font("asset/font/SourceCodePro-Regular.ttf");
+inline sf::Font textFont("asset/font/PixelifySans-Regular.ttf");
+inline sf::Font numberFont("asset/font/Play-Regular.ttf");
 
 enum COLOR_TYPE {
     BACKGROUND,
@@ -20,9 +21,8 @@ enum COLOR_TYPE {
     DISABLE
 };
 
-inline sf::Color color_set[1][5] =  {
-    {sf::Color(0xECF8F8), sf::Color(0x000000), sf::Color(0x539F64),
-     sf::Color(0xF94842), sf::Color(0xA0A0A0)}
+inline const sf::Color color_set[1][5] =  {
+    {sf::Color(0xFFFFFF), sf::Color(0x000000), sf::Color(0x539F64), sf::Color(0xF94842), sf::Color(0xA0A0A0)}
 };
 
 struct TreeStructure
