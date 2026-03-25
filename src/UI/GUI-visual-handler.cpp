@@ -53,7 +53,7 @@ void Animation::end()
 
 std::pair<int,int> getId(int x,int y) {return {std::min(x,y),std::max(x,y)}; }
 
-TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int numHeight)
+TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY, int startY)
 {
     this->pos = pos;
     this->size = size;
@@ -61,9 +61,9 @@ TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int nu
     this->background.setPosition(pos);
     this->background.setFillColor(sf::Color::White);
 
-    centerLine = size.x / 2;
-    stepY = size.y / (numHeight + 1);
-    startY = stepY * (1 - offsetUp);
+    this->centerLine = size.x / 2;
+    this->stepY = stepY;
+    this->startY = startY;
 
     debugDots.emplace_back(pos);
     debugDots.emplace_back(pos + size);

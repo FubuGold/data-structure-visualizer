@@ -26,18 +26,15 @@ void AVLTreeHandler::insert(int x)
 
 void AVLTreeHandler::loop()
 {
-    if (delaying) {
-        if (delayClock.getElapsedTime().asSeconds() <= DELAY_TIME) return;
-        else delaying = false;
-    }
+    visualizer->updateAnimation();
     if (visualizer->isAnimationEnd()) {
+        if (delayClock.getElapsedTime().asSeconds() <= DELAY_TIME) return;
         curSnapshot++;
         if (curSnapshot >= snapshot.size()) return;
         visualizer->setTreeStructure(snapshot[curSnapshot]);
-        delaying = true;
         delayClock.restart();
     }
-    visualizer->updateAnimation();
+    else delayClock.restart();
 }
 
 void AVLTreeHandler::endAnimation()

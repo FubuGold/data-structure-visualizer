@@ -41,15 +41,14 @@ class TreeVisualHandler : public sf::Drawable, public sf::Transformable
 {
 protected:
     static constexpr float nodeRadius = 20;
-    static constexpr float padding = 10;
-    static constexpr float offsetUp = 0.2;
+    static constexpr float padding = 20;
 
     class TreeNode : public Node
     {
     public:
         using Node::Node;
         using Node::getPos;
-        TreeNode() : Node({0,0},"",nodeRadius) {};
+        TreeNode() : Node({0,0},"",nodeRadius,15,0,3,2) {};
         int paId = -1;
         int height = -1;
         int leftCh = -1, rightCh = -1;
@@ -86,12 +85,15 @@ protected:
     void recalLine();
 
 public:
-    // The position is at the top left conner ({0,0})
-    TreeVisualHandler(
-        sf::Vector2f size,
-        sf::Vector2f pos,
-        int numHeight = 6
-    );
+    /**
+     * @brief Construct a new Tree Visual Handler object
+     * 
+     * @param size 
+     * @param pos 
+     * @param stepY 
+     * @param startY is relative to the top left corner of the visual
+     */
+    TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
     ~TreeVisualHandler() = default;
 
     void setTreeStructure(Global::TreeStructure &newStructure);

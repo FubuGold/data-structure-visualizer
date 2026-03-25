@@ -8,6 +8,16 @@ void IInteractableElement::setWindow(sf::RenderTarget *target_ptr)
     this->target_ptr = target_ptr;
 }
 
+void IInteractableElement::lock()
+{
+    this->locked = true;
+}
+
+void IInteractableElement::unlock()
+{
+    this->locked = false;
+}
+
 //======================================================//
 
 // Rectangle button implementation
@@ -50,7 +60,7 @@ RectangleButton::RectangleButton(
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor
-  ) : text(Global::font)
+  ) : text(Global::textFont)
 {
     this->rect.setSize(btnSize);
 
@@ -75,6 +85,8 @@ bool RectangleButton::containPos(sf::Vector2f pos)
 
 void RectangleButton::handleEvent(const std::optional<sf::Event>& e)
 {
+    if (locked) return;
+
     if (const sf::Event::MouseMoved *mouseMoved = e->getIf<sf::Event::MouseMoved>()) {
         sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseMoved->position);
         if (containPos(mousePos)) this->hoverIn();
@@ -140,7 +152,7 @@ TextInputField::TextInputField(
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor
-) : value(""), focused(0), text(Global::font)
+) : value(""), focused(0), text(Global::numberFont)
 {
     this->rect.setSize(fieldSize);
 
@@ -153,7 +165,7 @@ TextInputField::TextInputField(
     this->text.setCharacterSize(characterSize);
     this->text.setFillColor(textColor);
 
-    // To anyone who read this: The trick here is to set a character to init a local bound, then calculate on that local bound for the origin, then empty the string
+    // To anyone who read this: just read the code
     this->text.setString("0");
     this->text.setOrigin(
         {this->text.getLocalBounds().position.x,
@@ -182,6 +194,8 @@ bool TextInputField::containPos(sf::Vector2f pos)
 
 void TextInputField::handleEvent(const std::optional<sf::Event>& e)
 {
+    if (locked) return;
+
     if (const sf::Event::MouseMoved *mouseMoved = e->getIf<sf::Event::MouseMoved>()) {
         sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseMoved->position);
         if (containPos(mousePos)) this->hoverIn();
@@ -203,6 +217,110 @@ void TextInputField::handleEvent(const std::optional<sf::Event>& e)
         if (!this->focused) return;
         this->updateValue(textEntered->unicode);
     }
+}
+
+//======================================================//
+
+// Horizontal slider implemenentation
+
+HSlider::HSlider(
+    sf::Vector2f size,
+    sf::Vector2f pos,
+    int numSteps,
+    int startValue,
+    int endValue,
+    int borderThickness,
+    sf::Color bgColor,
+    sf::Color progressColor,
+    sf::Color borderColor
+)
+{
+    this->size = size;
+    this->pos = pos;
+    
+    this->numSteps = numSteps;
+    this->startValue = startValue;
+    this->endValue = endValue;
+
+    this->valueStep = (endValue - startValue) / numSteps;
+    // this->sizeStep = size.x / numSteps;
+
+    this->bgRect.setSize(size);
+    this->bgRect.setPosition(pos);
+    this->bgRect.setFillColor(bgColor);
+    this->bgRect.setOutlineThickness(borderThickness);
+    this->bgRect.setOutlineColor(borderColor);
+
+    this->progressRect.setPosition(pos);
+    this->progressRect.setFillColor(progressColor);
+    this->progressRect.setSize({0,size.y});
+}
+
+void HSlider::draw(sf::RenderTarget &target, sf::RenderStates state) const
+{
+    target.draw(bgRect);
+    target.draw(progressRect);
+}
+
+int HSlider::findSegment(sf::Vector2f pos)
+{
+    int diff = (pos.x - this->pos.x);
+    if (diff < 0) diff = 0;
+    if (diff > this->size.x) diff = this->size.x;
+    
+    float curStepF = diff * 1.0 * numSteps / size.x;
+    int curStep = curStepF;
+    if (curStepF - curStep >= 0.5) curStep++;
+    
+    return std::min(curStep, this->numSteps);
+}
+
+void HSlider::updateValue(int segment)
+{
+    this->curValue = this->startValue + this->valueStep * segment;
+    this->progressRect.setSize({this->size.x * segment / numSteps,this->size.y});
+
+    if (changeCallback) changeCallback(this->curValue);
+}
+
+bool HSlider::containPos(sf::Vector2f pos)
+{
+    return this->bgRect.getGlobalBounds().contains(pos);
+}
+
+void HSlider::handleEvent(const std::optional<sf::Event>& e)
+{
+    if (locked) return;
+
+    if (const sf::Event::MouseMoved *mouseMoved = e->getIf<sf::Event::MouseMoved>()) {
+        sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseMoved->position);
+        if (containPos(mousePos)) this->hoverIn();
+        else this->hoverOut();
+        if (this->clicked) {
+            this->updateValue(this->findSegment(mousePos));
+        }
+    }
+    else if (const sf::Event::MouseButtonPressed *mousePressed = e->getIf<sf::Event::MouseButtonPressed>()) {
+        sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mousePressed->position);
+        if (mousePressed->button == sf::Mouse::Button::Left && containPos(mousePos)) {
+            this->click();
+            this->updateValue(this->findSegment(mousePos));
+        }
+    }
+    else if (const sf::Event::MouseButtonReleased *mouseReleased = e->getIf<sf::Event::MouseButtonReleased>()) {
+        sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseReleased->position);
+        if (mouseReleased->button == sf::Mouse::Button::Left && containPos(mousePos)) this->release();
+    }
+}
+
+void HSlider::setChangeCb(sliderUpdateCb_t cb)
+{
+    this->changeCallback = cb;
+}
+
+float HSlider::getValue()
+{
+    return this->curValue;
 }
 
 }

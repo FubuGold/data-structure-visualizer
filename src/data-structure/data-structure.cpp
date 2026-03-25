@@ -108,6 +108,9 @@ void Heap::heapify(int id) {
     int minId = id;
     if (lt < vec.size() && vec[lt] > vec[id]) minId = lt;
     if (rt < vec.size() && vec[rt] > vec[id]) minId = rt;
+    if (minId == id) return;
+    std::swap(vec[minId],vec[id]);
+    heapify(minId);
 }
 
 void Heap::insert(int x)
@@ -265,7 +268,10 @@ void AVLTree::insertRecur(int x,Node *&cur)
         return;
     }
     std::cerr << "Current id: " << cur->id << '\n';
+
     cur->ishighlighted = true;
+    createSnapshot();
+    
     if (cur->val == x) {
         counter--;
         cur->ishighlighted = false;
@@ -275,17 +281,13 @@ void AVLTree::insertRecur(int x,Node *&cur)
 
     if (x < cur->val) {
         if (!cur->ltCh) {
-            // std::cerr << "whyyyyyyyy\n";
             cur->ltCh = new Node();
             cur->ltCh->id = counter;
             cur->ltCh->val = x;
             
-            // std::cerr << "2 whyyyyyyyy\n";
             createSnapshot();
-            // std::cerr << "3 whyyyyyyyy\n";
         }
         else {
-            // std::cerr << "whyyyyyyyy\n";
             insertRecur(x,cur->ltCh);
         }
     }

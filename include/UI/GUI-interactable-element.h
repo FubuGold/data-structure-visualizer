@@ -11,6 +11,8 @@
 namespace GUI
 {
 
+using voidCallback_t = std::function<void()>;
+
 /**
  * @brief Interface for interactable element
  */
@@ -18,11 +20,22 @@ class IInteractableElement : public sf::Drawable, public sf::Transformable
 {
 protected:
     sf::RenderTarget *target_ptr;
+    bool locked = false;
 public:
     virtual ~IInteractableElement() = default;
     virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
     virtual bool containPos(sf::Vector2f pos) = 0;
     void setWindow(sf::RenderTarget *target_ptr);
+    /**
+     * @brief This will completely lock the element, drop all event. Unlock by outside call.
+     * 
+     */
+    void lock();
+    /**
+     * @brief Unlock the element
+     * 
+     */
+    void unlock();
 };
 
 /**
@@ -156,6 +169,57 @@ public:
     bool containPos(sf::Vector2f pos) override;
 
     void handleEvent(const std::optional<sf::Event>& e) override; 
+};
+
+//======================================================//
+
+
+using sliderUpdateCb_t = std::function<void(float)>;
+
+/**
+ * @brief Horizontal slider with progress bar
+ * 
+ */
+class HSlider : public InteractableElement<voidCallback_t>
+{
+protected:
+
+    int numSteps;
+    float startValue, endValue, curValue;
+    float valueStep;
+
+    sliderUpdateCb_t changeCallback;
+
+    sf::Vector2f pos,size;
+    sf::RectangleShape bgRect,progressRect;
+    
+    void draw(sf::RenderTarget &target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+    int findSegment(sf::Vector2f pos);
+
+    void updateValue(int segment);
+
+public:
+
+    HSlider(
+        sf::Vector2f size,
+        sf::Vector2f pos,
+        int numSteps,
+        int startValue,
+        int endValue,
+        int borderThickness = 2,
+        sf::Color bgColor = sf::Color::White,
+        sf::Color progressColor = sf::Color(100,100,100),
+        sf::Color borderColor = sf::Color::Black
+    );
+
+    void handleEvent(const std::optional<sf::Event>& e) override;
+    bool containPos(sf::Vector2f pos) override;
+
+    void setChangeCb(sliderUpdateCb_t cb);
+
+    float getValue();
+
 };
 
 }
