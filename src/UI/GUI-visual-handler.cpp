@@ -27,17 +27,17 @@ void Animation::play(Node *object, sf::Vector2f startPos, sf::Vector2f endPos)
 void Animation::update()
 {
     float cappedDeltaTime;
-    // std::cerr << Global::deltaTime << ' ' << this->duration << '\n';
+    // std::cerr << Global::deltaTime << ' ' << Global::animationSpeed << '\n';
     if (this->duration <= 0) return;
-    if (this->duration > Global::deltaTime) {
-        cappedDeltaTime = Global::deltaTime;
-        this->duration -= Global::deltaTime;
+    if (this->duration > Global::deltaTime * Global::animationSpeed) {
+        cappedDeltaTime = Global::deltaTime * Global::animationSpeed;
+        this->duration -= Global::deltaTime * Global::animationSpeed;
     }
     else {
         cappedDeltaTime = this->duration;
         this->duration = 0;
     }
-    sf::Vector2f newPos = object->getPos() + sf::Vector2f(vectorVel * cappedDeltaTime);
+    sf::Vector2f newPos = object->getPos() + vectorVel * cappedDeltaTime;
     object->setPos(newPos);
 }
 
@@ -65,9 +65,9 @@ TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int st
     this->stepY = stepY;
     this->startY = startY;
 
-    debugDots.emplace_back(pos);
-    debugDots.emplace_back(pos + size);
-    debugDots.emplace_back(pos + sf::Vector2f(centerLine, startY));
+    // debugDots.emplace_back(pos);
+    // debugDots.emplace_back(pos + size);
+    // debugDots.emplace_back(pos + sf::Vector2f(centerLine, startY));
 }
 
 void TreeVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const

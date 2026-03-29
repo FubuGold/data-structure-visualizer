@@ -102,6 +102,14 @@ void RectangleButton::handleEvent(const std::optional<sf::Event>& e)
     }
 }
 
+void RectangleButton::setString(const std::string &s)
+{
+    this->text.setString(s);
+
+    this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
+    this->text.setPosition(this->rect.getGlobalBounds().position + this->rect.getLocalBounds().size * 0.5f);
+}
+
 //======================================================//
 
 // TextInputField class implementation
@@ -134,7 +142,7 @@ void TextInputField::updateValue(char32_t chr)
     if (chr == 8) {
         if (value.size()) value.erase(value.size()-1);
     }
-    else if (!this->filter || this->filter(chr)) {
+    else if (value.size() < maxChar && (!this->filter || this->filter(chr))) {
         value.insert(value.size(), sf::String(chr));
     }
 
@@ -146,6 +154,8 @@ void TextInputField::updateValue(char32_t chr)
 TextInputField::TextInputField(
     sf::Vector2f fieldSize,
     sf::Vector2f fieldPos,
+    sf::Vector2f textOffset,
+    int maxChar,
     int characterSize,
     int textOutline,
     int borderThickness,
@@ -165,14 +175,18 @@ TextInputField::TextInputField(
     this->text.setCharacterSize(characterSize);
     this->text.setFillColor(textColor);
 
-    // To anyone who read this: just read the code
-    this->text.setString("0");
-    this->text.setOrigin(
-        {this->text.getLocalBounds().position.x,
-            this->text.getLocalBounds().position.y + this->text.getLocalBounds().size.y * 0.5f}
-    );
+    this->maxChar = maxChar;
+
+    std::string tmp = "";
+    for (int i=0;i<maxChar;i++) tmp = std::move(tmp) + "0";
+    this->text.setString(tmp);
+    // this->text.setOrigin(
+    //     {this->text.getLocalBounds().position.x,
+    //         this->text.getLocalBounds().position.y + this->text.getLocalBounds().size.y * 0.5f}
+    // );
+    this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
     this->text.setString("");
-    this->text.setPosition({fieldPos.x, fieldPos.y + fieldSize.y * 0.5f});
+    this->text.setPosition(fieldPos + fieldSize * 0.5f + textOffset);
 
     // debugDots.push_back(DebugDot(this->text.getPosition()));
 }
@@ -309,6 +323,7 @@ void HSlider::handleEvent(const std::optional<sf::Event>& e)
     }
     else if (const sf::Event::MouseButtonReleased *mouseReleased = e->getIf<sf::Event::MouseButtonReleased>()) {
         sf::Vector2f mousePos = this->target_ptr->mapPixelToCoords(mouseReleased->position);
+        if (this->clicked) this->clicked = false;
         if (mouseReleased->button == sf::Mouse::Button::Left && containPos(mousePos)) this->release();
     }
 }

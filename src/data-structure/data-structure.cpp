@@ -1,6 +1,7 @@
 #include "../../include/data-structure/data-structure.h"
 
 #include <queue>
+#include <stack>
 #include <iostream> // For debug
 
 namespace DataStructure
@@ -92,17 +93,21 @@ Heap::~Heap()
     this->clear();
 }
 
-int Heap::findPa(int x) {
+int Heap::findPa(int x)
+{
     return (x-1) / 2;
 }
-int Heap::findLt(int x) {
+int Heap::findLt(int x)
+{
     return x * 2 + 1;
 }
-int Heap::findRt(int x) {
+int Heap::findRt(int x)
+{
     return x * 2 + 2;
 }
 
-void Heap::heapify(int id) {
+void Heap::heapify(int id)
+{
     int lt = findLt(id);
     int rt = findRt(id);
     int minId = id;
@@ -118,7 +123,6 @@ void Heap::insert(int x)
     counter++;
     int id = vec.size();
     vec.push_back(x);
-
 }
 
 std::optional<int> Heap::getMax()
@@ -245,14 +249,22 @@ void AVLTree::balancing(Node *&cur)
 }
 void AVLTree::findMax(Node *&cur, int& retVal)
 {
+    cur->ishighlighted = true;
+    createSnapshot();
     if (cur->rtCh) {
         findMax(cur->rtCh, retVal);
+        cur->ishighlighted = false;
+        createSnapshot();
         return;
     }
+    cur->ishighlighted = false;
     retVal = cur->val;
     Node *tmp = cur->ltCh;
     delete cur;
     cur = tmp;
+
+    createSnapshot();
+
     return;
 }
 
@@ -310,35 +322,47 @@ void AVLTree::insertRecur(int x,Node *&cur)
     return;
 }
 
-void AVLTree::removeRecur(int x,Node *&cur)
+bool AVLTree::removeRecur(int x,Node *&cur)
 {
+    if (!cur) return false;
+    cur->ishighlighted = true;
+    createSnapshot();
+    bool res = 0;
     if (x < cur->val) {
-        removeRecur(x, cur->ltCh);
+        res = removeRecur(x, cur->ltCh);
     }
     else if (x > cur->val) {
-        removeRecur(x,cur->rtCh);
+        res = removeRecur(x,cur->rtCh);
     }
     else {
         if (!cur->ltCh) {
             Node *tmp = cur->rtCh;
             delete cur;
             cur = tmp;
-            return;
+            createSnapshot();
         }
         else if (!cur->rtCh) {
             Node *tmp = cur->ltCh;
             delete cur;
             cur = tmp;
-            return;
+            createSnapshot();
         }
         else {
             int tmpVal = INT_MIN;
             findMax(cur->ltCh,tmpVal);
             cur->val = tmpVal;
+            createSnapshot();
         }
+        res = 1;
     }
 
-    balancing(cur);
+    if (cur) {
+        cur->ishighlighted = false;
+        balancing(cur);
+    }
+    createSnapshot();
+
+    return res;
 }
 
 void AVLTree::clearRecur(Node *cur) {
@@ -358,20 +382,38 @@ void AVLTree::insert(int x)
 bool AVLTree::find(int x)
 {
     Node *cur = root;
-    std::cerr << "Find begin " << x << '\n';
+    std::stack<Node*> st;
+    bool flag = false;
+    // std::cerr << "Find begin " << x << '\n';
     while (cur) {
-        std::cerr << cur->val << '\n';
-        if (cur->val == x) return true;
+        cur->ishighlighted = true;
+        st.push(cur);
+        createSnapshot();
+        // std::cerr << cur->val << '\n';
+        if (cur->val == x) {
+            flag = true;
+            break;
+        }
         if (x < cur->val) cur = cur->ltCh;
         else cur = cur->rtCh;
     }
+    while (st.size()) {
+        st.top()->ishighlighted = false;
+        st.pop();
+        createSnapshot();
+    }
+
     std::cerr << "Find end\n";
-    return false;
+    return flag;
 }
 bool AVLTree::remove(int x)
 {
-    if (find(x)) {
-        removeRecur(x,root);
+    return removeRecur(x,root);
+}
+bool AVLTree::update(int x,int newVal)
+{
+    if (remove(x)) {
+        insert(newVal);
         return true;
     }
     return false;

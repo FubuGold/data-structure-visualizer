@@ -7,11 +7,25 @@
 namespace Global
 {
 
+inline const int numScene = 8;
+
+enum class SceneState
+{
+    MENU,
+    SLL, HEAP, AVL,
+    TRIE, SP, MST,
+    SETTING
+};
+template <typename T>
+int toInt(T s) {return static_cast<int>(s);}
+inline SceneState curAppState = SceneState::MENU;
+
 inline float deltaTime;
 inline sf::Clock deltaClock;
 
 inline sf::Font textFont("asset/font/PixelifySans-Regular.ttf");
 inline sf::Font numberFont("asset/font/Play-Regular.ttf");
+inline float animationSpeed = 1;
 
 enum COLOR_TYPE {
     BACKGROUND,
@@ -21,8 +35,8 @@ enum COLOR_TYPE {
     DISABLE
 };
 
-inline const sf::Color color_set[1][5] =  {
-    {sf::Color(0xFFFFFF), sf::Color(0x000000), sf::Color(0x539F64), sf::Color(0xF94842), sf::Color(0xA0A0A0)}
+inline const sf::Color colorSet[1][5] =  {
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x539F64FF), sf::Color(0xF94842FF), sf::Color(0xA0A0A0FF)}
 };
 
 struct TreeStructure

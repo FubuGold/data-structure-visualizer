@@ -25,6 +25,7 @@ public:
     virtual void insert(int x) {};
     virtual bool find(int x) {};
     virtual bool remove(int x) {};
+    virtual bool update(int x,int newVal) {};
     virtual void clear() {};
 
     virtual void createSnapshot() {};
@@ -59,9 +60,9 @@ class Heap : public BaseStructure
 {
 private:
     std::vector<int> vec;
-    int findPa(int x);
-    int findLt(int x);
-    int findRt(int x);
+    inline int findPa(int x);
+    inline int findLt(int x);
+    inline int findRt(int x);
     void heapify(int id);
 
 public:
@@ -96,7 +97,7 @@ private:
     // Get the max and delete node, with reconecting
     void findMax(Node *&cur, int& retVal);
     void insertRecur(int x,Node *&cur);
-    void removeRecur(int x,Node *&cur);
+    bool removeRecur(int x,Node *&cur);
     void clearRecur(Node *cur);
 
     void createSnapshotRecur(Node *cur, Global::TreeStructure &structure);
@@ -109,6 +110,7 @@ public:
     void insert(int x) override;
     bool find(int x) override;
     bool remove(int x) override;
+    bool update(int x,int newVal) override;
     void clear() override;
 
 };

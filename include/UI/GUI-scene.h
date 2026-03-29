@@ -27,28 +27,91 @@ protected:
 
     sf::RenderTarget *target_ptr;
     
-    public:
+public:
     
-void handleEvent(const std::optional<sf::Event>& e);
+    void handleEvent(const std::optional<sf::Event>& e);
     
-    virtual void setup() = 0;
+    virtual void setup();
     virtual void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default);
 
     virtual void loopUpdate() {}
+    virtual void clear() {}
 
     void setWindow(sf::RenderTarget *target_ptr);
 };
+
+//======================================================//
 
 class DebugScene : public Scene
 {
 protected:
 
     std::shared_ptr<GUI::TreeVisualHandler> avl;
-    AVLTreeHandler avlHandler;    
+    Handler::AVLTreeHandler avlHandler;
 
 public:
     void setup() override;
 
+    void loopUpdate() override;
+};
+
+//======================================================//
+
+class MenuScene : public Scene
+{
+protected:
+
+    enum DSType 
+    {
+        SLL,
+        HEAP,
+        AVL,
+        TRIE,
+        SP,
+        MST
+    };
+
+    sf::Texture thumbnailImg[6];
+    static constexpr std::string filename[6] = {
+        "SLL.png","Heap.png","AVL.png","Trie.png","SP.png","MST.png"
+    };
+
+public:
+
+    void setup() override;
+
+};
+
+//======================================================//
+
+/**
+ * @brief Base scene for data structure visual
+ * 
+ */
+class VisualScene : public Scene
+{
+protected:
+
+    std::shared_ptr<GUI::RectangleButton> insertBtn, removeBtn, findBtn, updateBtn, clearBtn,
+                                          fileBtn, randomBtn, undoBtn, redoBtn;
+    std::shared_ptr<GUI::TextInputField> inputField, updField;
+
+public:
+
+    void setup() override;
+
+};
+
+class AVLScene : public VisualScene
+{
+protected:
+
+    std::shared_ptr<GUI::TreeVisualHandler> treeVisual;
+    Handler::AVLTreeHandler avlHandler;
+
+public:
+
+    void setup() override;
     void loopUpdate() override;
 };
 

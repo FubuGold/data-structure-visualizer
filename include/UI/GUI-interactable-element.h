@@ -122,6 +122,8 @@ public:
     bool containPos(sf::Vector2f pos) override;
     
     void handleEvent(const std::optional<sf::Event>& e) override;
+
+    void setString(const std::string &s);
 };
 
 //======================================================//
@@ -141,6 +143,8 @@ protected:
     bool focused;
     inputFieldFilterCb_t filter;
 
+    int maxChar;
+
     // std::vector<DebugDot> debugDots;
 
     void click() override;
@@ -153,6 +157,8 @@ public:
     TextInputField(
         sf::Vector2f fieldSize = {300, 500},
         sf::Vector2f fieldPos = {0, 0},
+        sf::Vector2f textOffset = {0,0},
+        int maxChar = 10,
         int characterSize = 20,
         int textOutline = 0,
         int borderThickness = 2,
