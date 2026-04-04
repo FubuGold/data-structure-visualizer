@@ -1,0 +1,2 @@
+if delete v:
+    insert newV

@@ -4,6 +4,8 @@
 #include <stack>
 #include <iostream> // For debug
 
+using Global::toInt;
+
 namespace DataStructure
 {
 
@@ -168,13 +170,15 @@ void AVLTree::createSnapshotRecur(Node *cur, Global::TreeStructure &structure)
     createSnapshotRecur(cur->rtCh, structure);
 }
 
-void AVLTree::createSnapshot()
+void AVLTree::createSnapshot(int func, int line)
 {
     snapshot_ptr->push_back(Global::TreeStructure());
     createSnapshotRecur(root, snapshot_ptr->back());
     snapshot_ptr->back().rootId = root ? root->id : -1;
+    snapshot_ptr->back().codeFunction = func;
+    snapshot_ptr->back().codeLine = line;
 
-    std::cerr << "AVL snapshot created\n";
+    // std::cerr << "AVL snapshot created\n";
 }
 
 int AVLTree::Node::leftHeight() 
@@ -204,7 +208,7 @@ void AVLTree::leftRotate(Node *&cur)
 
     cur = res;
 
-    createSnapshot();
+    // createSnapshot(toInt(Global::AVL_FUNC::BALANCE), );
 }
 void AVLTree::rightRotate(Node *&cur)
 {
@@ -220,41 +224,52 @@ void AVLTree::rightRotate(Node *&cur)
 
     cur = res;
 
-    createSnapshot();
-
-    return;
+    // createSnapshot();
 }
 
 void AVLTree::balancing(Node *&cur)
 {
     recalHeight(cur);
     int ltH = cur->leftHeight(), rtH = cur->rightHeight();
-    std::cerr << "Balancing: " << cur->id << ' ' << ltH << ' ' << rtH << '\n';
+    // std::cerr << "Balancing: " << cur->id << ' ' << ltH << ' ' << rtH << '\n';
+    createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 0);
     if (ltH - rtH >= -1 && ltH - rtH <= 1) return;
 
-    std::cerr << "Balancing called \n";
+    // std::cerr << "Balancing called \n";
 
     if (ltH > rtH) {
-        std::cerr << "Left unbalanced\n";
-        if (cur->ltCh->leftHeight() <= cur->ltCh->rightHeight()) 
+        // std::cerr << "Left unbalanced\n";
+        if (cur->ltCh->leftHeight() <= cur->ltCh->rightHeight()) {
             leftRotate(cur->ltCh);
-        return rightRotate(cur);
+            createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 1);
+            rightRotate(cur);
+            createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 1);
+            return;
+        }
+        rightRotate(cur);
+        createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 2);
     }
     else {
-        std::cerr << "Right unbalanced" << '\n';
-        if (cur->rtCh->leftHeight() >= cur->rtCh->rightHeight()) 
+        // std::cerr << "Right unbalanced" << '\n';
+        if (cur->rtCh->leftHeight() >= cur->rtCh->rightHeight()) {
             rightRotate(cur->rtCh);
-        return leftRotate(cur);
+            createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 3);
+            leftRotate(cur);
+            createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 3);
+            return;
+        }
+        leftRotate(cur);
+        createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 4);
     }
 }
 void AVLTree::findMax(Node *&cur, int& retVal)
 {
     cur->ishighlighted = true;
-    createSnapshot();
+    createSnapshot(toInt(Global::AVL_FUNC::FIND), 0);
     if (cur->rtCh) {
         findMax(cur->rtCh, retVal);
         cur->ishighlighted = false;
-        createSnapshot();
+        createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
         return;
     }
     cur->ishighlighted = false;
@@ -263,7 +278,7 @@ void AVLTree::findMax(Node *&cur, int& retVal)
     delete cur;
     cur = tmp;
 
-    createSnapshot();
+    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
 
     return;
 }
@@ -276,49 +291,34 @@ void AVLTree::insertRecur(int x,Node *&cur)
         cur->id = counter;
         cur->val = x;
 
-        createSnapshot();
+        createSnapshot(toInt(Global::AVL_FUNC::INSERT), 0);
         return;
     }
     std::cerr << "Current id: " << cur->id << '\n';
 
     cur->ishighlighted = true;
-    createSnapshot();
+    createSnapshot(toInt(Global::AVL_FUNC::INSERT), 0);
     
     if (cur->val == x) {
         counter--;
         cur->ishighlighted = false;
-        createSnapshot();
+        createSnapshot(toInt(Global::AVL_FUNC::INSERT), 1);
         return;
     }
 
     if (x < cur->val) {
-        if (!cur->ltCh) {
-            cur->ltCh = new Node();
-            cur->ltCh->id = counter;
-            cur->ltCh->val = x;
-            
-            createSnapshot();
-        }
-        else {
-            insertRecur(x,cur->ltCh);
-        }
+        createSnapshot(toInt(Global::AVL_FUNC::INSERT), 3);
+        insertRecur(x,cur->ltCh);
     }
     else {
-        if (!cur->rtCh) {
-            cur->rtCh = new Node();
-            cur->rtCh->id = counter;
-            cur->rtCh->val = x;
-
-            createSnapshot();
-        }
-        else {
-            insertRecur(x,cur->rtCh);
-        }
+        createSnapshot(toInt(Global::AVL_FUNC::INSERT), 2);
+        insertRecur(x,cur->rtCh);
     }
     cur->ishighlighted = false;
+    createSnapshot(toInt(Global::AVL_FUNC::INSERT), 4);
     balancing(cur);
-    createSnapshot();
-    std::cerr << "Insert recur " << cur->id << " end\n";
+    if (cur == root) createSnapshot(toInt(Global::AVL_FUNC::INSERT), 4);
+    // std::cerr << "Insert recur " << cur->id << " end\n";
     return;
 }
 
@@ -326,7 +326,7 @@ bool AVLTree::removeRecur(int x,Node *&cur)
 {
     if (!cur) return false;
     cur->ishighlighted = true;
-    createSnapshot();
+    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 0);
     bool res = 0;
     if (x < cur->val) {
         res = removeRecur(x, cur->ltCh);
@@ -335,32 +335,37 @@ bool AVLTree::removeRecur(int x,Node *&cur)
         res = removeRecur(x,cur->rtCh);
     }
     else {
+        createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
         if (!cur->ltCh) {
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
             Node *tmp = cur->rtCh;
             delete cur;
             cur = tmp;
-            createSnapshot();
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
         }
         else if (!cur->rtCh) {
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
             Node *tmp = cur->ltCh;
             delete cur;
             cur = tmp;
-            createSnapshot();
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
         }
         else {
             int tmpVal = INT_MIN;
             findMax(cur->ltCh,tmpVal);
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
             cur->val = tmpVal;
-            createSnapshot();
+            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
         }
         res = 1;
     }
 
+    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 4);
     if (cur) {
         cur->ishighlighted = false;
         balancing(cur);
     }
-    createSnapshot();
+    if (cur == root) createSnapshot(toInt(Global::AVL_FUNC::DELETE), 4);
 
     return res;
 }
@@ -374,36 +379,47 @@ void AVLTree::clearRecur(Node *cur) {
 
 void AVLTree::insert(int x)
 {
-    std::cerr << "AVL insert called\n";
+    // std::cerr << "AVL insert called\n";
     counter++;
     insertRecur(x,root);
-    std::cerr << "AVL insert end\n";
+    // std::cerr << "AVL insert end\n";
 }
 bool AVLTree::find(int x)
 {
     Node *cur = root;
     std::stack<Node*> st;
     bool flag = false;
-    // std::cerr << "Find begin " << x << '\n';
-    while (cur) {
+    while (true) {
+        if (cur == nullptr) {
+            createSnapshot(toInt(Global::AVL_FUNC::FIND), 0);
+            return flag;
+        }
         cur->ishighlighted = true;
         st.push(cur);
-        createSnapshot();
-        // std::cerr << cur->val << '\n';
         if (cur->val == x) {
+            createSnapshot(toInt(Global::AVL_FUNC::FIND), 1);
             flag = true;
             break;
         }
-        if (x < cur->val) cur = cur->ltCh;
-        else cur = cur->rtCh;
+        if (x < cur->val) {
+            cur = cur->ltCh;
+            createSnapshot(toInt(Global::AVL_FUNC::FIND), 3);
+        }
+        else {
+            cur = cur->rtCh;
+            createSnapshot(toInt(Global::AVL_FUNC::FIND), 2);
+        }
     }
+    // if (!flag) createSnapshot(toInt(Global::AVL_FUNC::FIND), 0);
+    // else createSnapshot(toInt(Global::AVL_FUNC::FIND), 1);
+
     while (st.size()) {
         st.top()->ishighlighted = false;
         st.pop();
-        createSnapshot();
+        // createSnapshot();
     }
 
-    std::cerr << "Find end\n";
+
     return flag;
 }
 bool AVLTree::remove(int x)
@@ -412,7 +428,9 @@ bool AVLTree::remove(int x)
 }
 bool AVLTree::update(int x,int newVal)
 {
+    createSnapshot(toInt(Global::AVL_FUNC::UPDATE), 0);
     if (remove(x)) {
+        createSnapshot(toInt(Global::AVL_FUNC::UPDATE), 1);
         insert(newVal);
         return true;
     }

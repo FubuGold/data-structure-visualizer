@@ -338,4 +338,28 @@ float HSlider::getValue()
     return this->curValue;
 }
 
+void HSlider::setValue(float val)
+{
+    std::cerr << startValue << ' ' << endValue << ' ' << val << '\n';
+    assert(val >= startValue && val <= endValue);
+    
+    float curStepF = (val - startValue) / valueStep;
+    int curStep = curStepF;
+    if (curStepF - curStep >= 0.5) curStep++;
+
+    this->curValue = this->startValue + this->valueStep * curStep;
+    this->progressRect.setSize({this->size.x * curStep / numSteps,this->size.y});
+
+    if (changeCallback) changeCallback(this->curValue);
+}
+
+void HSlider::setNewRange(float startValue, float endValue, int numSteps)
+{
+    this->numSteps = numSteps;
+    this->startValue = startValue;
+    this->endValue = endValue;
+
+    this->valueStep = (endValue - startValue) / numSteps;
+}
+
 }

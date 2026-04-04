@@ -1,0 +1,5 @@
+if this == null: add v
+else if this == v: return
+else if this < v: this = this->right
+else this = this->left
+balancing

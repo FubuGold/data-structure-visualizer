@@ -22,6 +22,7 @@ protected:
     sf::RenderTarget *target_ptr;
     bool locked = false;
 public:
+    IInteractableElement() = default;
     virtual ~IInteractableElement() = default;
     virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
     virtual bool containPos(sf::Vector2f pos) = 0;
@@ -218,6 +219,7 @@ public:
         sf::Color progressColor = sf::Color(100,100,100),
         sf::Color borderColor = sf::Color::Black
     );
+    ~HSlider() = default;
 
     void handleEvent(const std::optional<sf::Event>& e) override;
     bool containPos(sf::Vector2f pos) override;
@@ -225,7 +227,9 @@ public:
     void setChangeCb(sliderUpdateCb_t cb);
 
     float getValue();
+    void setValue(float val);
 
+    void setNewRange(float startValue, float endValue, int numSteps);
 };
 
 }

@@ -92,9 +92,12 @@ class VisualScene : public Scene
 {
 protected:
 
-    std::shared_ptr<GUI::RectangleButton> insertBtn, removeBtn, findBtn, updateBtn, clearBtn,
-                                          fileBtn, randomBtn, undoBtn, redoBtn;
+    // Header bar
+    std::shared_ptr<GUI::RectangleButton> insertBtn, removeBtn, findBtn, updateBtn, clearBtn, randomBtn;
     std::shared_ptr<GUI::TextInputField> inputField, updField;
+    // Footer bar
+    std::shared_ptr<GUI::RectangleButton> fullUndoBtn, undoBtn, redoBtn, fullRedoBtn, speedBtn, fileBtn;
+    std::shared_ptr<GUI::HSlider> animationSlider;
 
 public:
 

@@ -49,6 +49,7 @@ public:
         int textOutline = 0,
         sf::Color textColor = sf::Color::Black
     );
+    ~ValueText() = default;
 
     void operator=(const T x);
 
@@ -83,10 +84,10 @@ public:
         int textOutline = 0,
         int borderThickness = 0,
         int highlightThickness = 0,
-        sf::Color bgColor = sf::Color(0,250,0),
-        sf::Color textColor = sf::Color::Black,
-        sf::Color borderColor = sf::Color::Black,
-        sf::Color highlightedColor = sf::Color::Red
+        sf::Color bgColor = sf::Color::Transparent,
+        sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        sf::Color borderColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
+        sf::Color highlightedColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT]
     );
     ~Node() = default;
 
@@ -123,7 +124,7 @@ public:
         sf::Vector2f startPos,
         sf::Vector2f endPos,
         std::string text = "",
-        int lineThickness = 5,
+        int lineThickness = 3,
         int textSize = 20,
         int textOutlineThickness = 2,
         sf::Color lineColor = sf::Color::Black,

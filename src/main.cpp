@@ -26,6 +26,7 @@ void setupScene(sf::RenderTarget *target)
 
 int main()
 {
+
     avlTest();
     std::cerr << "======================================================" << '\n';
     sf::RenderWindow window(sf::VideoMode({1280, 800}), "Data structure visualizer", sf::State::Windowed);

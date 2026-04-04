@@ -28,7 +28,7 @@ public:
     virtual bool update(int x,int newVal) {};
     virtual void clear() {};
 
-    virtual void createSnapshot() {};
+    virtual void createSnapshot(int func,int line) {};
 
     // Does not unlink the snapshot list
     void clearSnapshot();
@@ -105,7 +105,7 @@ private:
 public:
     ~AVLTree();
 
-    void createSnapshot() override;
+    void createSnapshot(int func,int line) override;
 
     void insert(int x) override;
     bool find(int x) override;

@@ -4,15 +4,9 @@
 #include <bits/stdc++.h>
 
 #include "../../include/data-structure/data-structure.h"
+#include "../../include/data-structure/file-validator.h"
 
 using namespace std;
-
-mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
-
-int rng(int l,int r)
-{
-    return uniform_int_distribution<int>(l,r)(rnd);
-}
 
 void avlTest()
 {
@@ -43,7 +37,22 @@ void avlTest()
         tree.remove(vec[i]);
     }
 
+    tree.clear();
+
     std::cerr << "AVL test completeed\n";
+
+    using Validator::avlValidator;
+    if (!avlValidator("./src/test/avlTest1.txt")) {
+        std::cerr << "AVL validator test 1 failed\n";
+    }
+    if (avlValidator("./src/test/avlTest2.txt")) {
+        std::cerr << "AVL validator test 2 failed\n";
+    }
+    if (avlValidator("./src/test/avlTest3.txt")) {
+        std::cerr << "AVL validator test 3 failed\n";
+    }
+    
+    std::cerr << "AVL validator test completed\n";
 }
 
 #endif // DATA_STRUCTURE_TEST

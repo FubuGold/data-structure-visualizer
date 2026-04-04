@@ -12,6 +12,8 @@ int stringToInt(std::string s)
     return x;
 }
 
+using Global::toInt;
+
 namespace GUI
 {
 
@@ -65,25 +67,6 @@ void Scene::setWindow(sf::RenderTarget *target_ptr)
 
 void DebugScene::setup()
 {
-    // std::shared_ptr<RectangleButton> button1(new RectangleButton(
-    //     {200, 50}, {300,500},
-    //     "This is a button",
-    //     20, 0, 2,
-    //     sf::Color::White, sf::Color::Blue, sf::Color::Black
-    // ));
-    // addElement(button1);
-    // button1->setClickCallback([](sf::RectangleShape &rect,sf::Text &text){
-    //     std::cerr << "Click registered\n";
-    // });
-    // button1->setReleaseCallback([](sf::RectangleShape &rect,sf::Text &text){
-    //     std::cerr << "Release registered\n";
-    // });
-    // button1->setHoverInCallback([](sf::RectangleShape &rect,sf::Text &text){
-    //     std::cerr << "Hover in detected\n";
-    // });
-    // button1->setHoverOutCallback([](sf::RectangleShape &rect,sf::Text &text){
-    //     std::cerr << "Hover out detected\n";
-    // });
 
     this->avl = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{800, 500}, sf::Vector2f{50, 200});
     addElement(avl);
@@ -120,63 +103,6 @@ void DebugScene::setup()
         avlHandler.insert(x);
     });
     addElement(inputEnter);
-
-    // std::shared_ptr<TextInputField> idField1(new TextInputField(
-    //     {100, 20}, {450, 50},
-    //     20, 0, 2,
-    //     sf::Color::White, sf::Color::Magenta, sf::Color::Black
-    // ));
-    // idField1->setClickCallback([](){
-    //     std::cerr << "ID field clicked : 1\n";
-    // });
-    // idField1->setHoverInCallback([](){
-    //     std::cerr << "ID field hovered in : 1\n";
-    // });
-    // idField1->setHoverOutCallback([](){
-    //     std::cerr << "ID field hovered out : 1\n";
-    // });
-    // addElement(idField1);
-
-    // std::shared_ptr<TextInputField> idField2(new TextInputField(
-    //     {100, 20}, {450, 70},
-    //     20, 0, 2,
-    //     sf::Color::White, sf::Color::Magenta, sf::Color::Black
-    // ));
-    // idField2->setClickCallback([](){
-    //     std::cerr << "ID field clicked : 2\n";
-    // });
-    // idField2->setHoverInCallback([](){
-    //     std::cerr << "ID field hovered in : 2\n";
-    // });
-    // idField2->setHoverOutCallback([](){
-    //     std::cerr << "ID field hovered out : 2\n";
-    // });
-    // addElement(idField2);
-
-    // std::shared_ptr<RectangleButton> idEnter(new RectangleButton(
-    //     {100, 20}, {570, 60},
-    //     "Enter",
-    //     20, 0, 2
-    // ));
-    // idEnter->setReleaseCallback([idField1, idField2, this](sf::RectangleShape& rect,sf::Text& text) {
-    //     int id1 = std::stoi( std::string(idField1->getValue()) );
-    //     int id2 = std::stoi( std::string(idField2->getValue()) );
-        
-    //     avl->swap(id1,id2);
-    // });
-    // addElement(idEnter);
-
-    // std::shared_ptr<Node> nodeTest(new Node(
-    //     {1000,800},
-    //     "1",
-    //     20
-    // ));
-    // addElement(nodeTest);
-    
-    // std::shared_ptr<Line> edgeTest(new Line(
-    //     {340, 750}, {900, 102}, "abc"
-    // ));
-    // addElement(edgeTest);
 
     std::shared_ptr<RectangleButton> clearButton(new RectangleButton(
         {100, 20}, {950, 600},
@@ -426,7 +352,7 @@ void VisualScene::setup()
 
     this->inputField = std::make_shared<GUI::TextInputField>(
         sf::Vector2f(164,40), sf::Vector2f(24,20), sf::Vector2f(0,0),
-        10, 22, 0, 2,
+        9, 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
@@ -484,7 +410,7 @@ void VisualScene::setup()
 
     this->updField = std::make_shared<GUI::TextInputField>(
         sf::Vector2f(203,40), sf::Vector2f(720,20), sf::Vector2f(10,0),
-        10, 22, 0, 2,
+        9, 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
@@ -533,63 +459,95 @@ void VisualScene::setup()
     footerBarBg->setPosition({0,720});
     addElement(footerBarBg);
 
+    this->fullUndoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,40), sf::Vector2f(24,740),
+        "<<", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(this->fullUndoBtn);
+
     this->undoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(711,740),
-        "Undo", 22, 0, 2,
+        sf::Vector2f(40,40), sf::Vector2f(82,740),
+        "<", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
     );
     addElement(this->undoBtn);
 
+    std::shared_ptr<sf::RectangleShape> animationStepBg = std::make_shared<sf::RectangleShape>();
+    animationStepBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
+    animationStepBg->setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    animationStepBg->setOutlineThickness(2);
+    animationStepBg->setSize({528,40});
+    animationStepBg->setPosition({140,740});
+    addElement(animationStepBg);
+
+    this->animationSlider = std::make_shared<GUI::HSlider>(
+        sf::Vector2f(508,26), sf::Vector2f(150,747),
+        1, 0, 1, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        sf::Color(0xA0A0A0FF), 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(this->animationSlider);
+
     this->redoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(839,740),
-        "Redo", 22, 0, 2,
+        sf::Vector2f(40,40), sf::Vector2f(686,740),
+        ">", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
     );
     addElement(this->redoBtn);
 
-    std::shared_ptr<sf::RectangleShape> animationSpdBg = std::make_shared<sf::RectangleShape>();
-    animationSpdBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
-    animationSpdBg->setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
-    animationSpdBg->setOutlineThickness(2);
-    animationSpdBg->setSize({569,40});
-    animationSpdBg->setPosition({124,740});
-    addElement(animationSpdBg);
+    this->fullRedoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,40), sf::Vector2f(744,740),
+        ">>", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(this->fullRedoBtn);
 
-    std::shared_ptr<sf::Text> animationSpdText = std::make_shared<sf::Text>(Global::textFont);
-    animationSpdText->setString("Animation speed");
-    animationSpdText->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
-    animationSpdText->setCharacterSize(22);    
-    animationSpdText->setOrigin(animationSpdText->getLocalBounds().position + animationSpdText->getLocalBounds().size * 0.5f);
-    animationSpdText->setPosition(sf::Vector2f(133,747) + sf::Vector2f(174, 26) * 0.5f);
-    addElement(animationSpdText);
+    std::cerr << "Added animation slider\n";
 
     std::shared_ptr<GUI::ValueText<std::string>> animationSpdDisplay = std::make_shared<GUI::ValueText<std::string>>(
-        sf::Vector2f(661,747) + sf::Vector2f(0,0),
+        sf::Vector2f(872,747) + sf::Vector2f(7,-3),
         22, 0, Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
     );
     *animationSpdDisplay = "1x";
-    addElement(animationSpdDisplay);
 
-    std::shared_ptr<HSlider> animationSpdSlider = std::make_shared<HSlider>(
-        sf::Vector2f(320,26),sf::Vector2f(324,747),
-        5, 1, 6,
-        2,
+    std::shared_ptr<GUI::RectangleButton> animationSpdBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,40), sf::Vector2f(802,740),
+        "", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
-        sf::Color(0xA0A0A0FF), 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
     );
-    animationSpdSlider->setChangeCb([animationSpdDisplay](float value) {
-        (*animationSpdDisplay) = std::to_string(int(value)) + 'x';
-        Global::animationSpeed = value;
+    animationSpdBtn->setReleaseCallback([animationSpdDisplay](sf::RectangleShape &rect, sf::Text &text) {
+        Global::animationSpeed += 1;
+        if (Global::animationSpeed > 5) Global::animationSpeed = 1;
+        *animationSpdDisplay = std::to_string((int)Global::animationSpeed) + "x";
     });
-    addElement(animationSpdSlider);
+
+    addElement(animationSpdBtn);
+    addElement(animationSpdDisplay);
+
+    std::shared_ptr<sf::Text> animationSpdText = std::make_shared<sf::Text>(Global::textFont);
+    animationSpdText->setString("Speed");
+    animationSpdText->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    animationSpdText->setCharacterSize(22);    
+    animationSpdText->setOrigin(animationSpdText->getLocalBounds().position + animationSpdText->getLocalBounds().size * 0.5f);
+    animationSpdText->setPosition(sf::Vector2f(805,748) + sf::Vector2f(70, 26) * 0.5f);
+    addElement(animationSpdText);
+
+    std::cerr << "Added speed button\n";
 
     this->fileBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(967,740),
+        sf::Vector2f(110,40), sf::Vector2f(969,740),
         "File", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -598,7 +556,7 @@ void VisualScene::setup()
     addElement(this->fileBtn);
 
     std::shared_ptr<GUI::RectangleButton> menuBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(1095,740),
+        sf::Vector2f(110,40), sf::Vector2f(1135,740),
         "Menu", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -625,9 +583,27 @@ void AVLScene::setup()
 
     std::cerr << "AVL scene setup start\n";
 
-    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80});
+    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
     avlHandler.setVisualizer(treeVisual);
     addElement(treeVisual);
+
+    avlHandler.setAnimationSlider(this->animationSlider);
+    this->animationSlider->lock();
+
+    avlHandler.addLockableElement(this->insertBtn);
+    avlHandler.addLockableElement(this->removeBtn);
+    avlHandler.addLockableElement(this->findBtn);
+    avlHandler.addLockableElement(this->updateBtn);
+    avlHandler.addLockableElement(this->clearBtn);
+    avlHandler.addLockableElement(this->randomBtn);
+    avlHandler.addLockableElement(this->inputField);
+    avlHandler.addLockableElement(this->updField);
+    avlHandler.addLockableElement(this->fileBtn);
+    avlHandler.addLockableElement(this->fullUndoBtn);
+    avlHandler.addLockableElement(this->undoBtn);
+    avlHandler.addLockableElement(this->redoBtn);
+    // avlHandler.addLockableElement(this->fullRedoBtn);
+
     
     this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
         std::string value = this->inputField->getValue();
@@ -657,9 +633,55 @@ void AVLScene::setup()
         this->avlHandler.update(stringToInt(value), stringToInt(newValue));
     });
 
+    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.random();
+        this->avlHandler.endAnimation();
+    });
+
     this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
         this->avlHandler.clear();
     });
+
+    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.fullUndo();
+    });
+
+    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.endAnimation();
+    });
+
+    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.undo();
+    });
+
+    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.redo();
+    });
+
+    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->avlHandler.file();
+    });
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/avl/insert.txt",
+        "./asset/psuedo-code/avl/find.txt",
+        "./asset/psuedo-code/avl/delete.txt",
+        "./asset/psuedo-code/avl/update.txt",
+        "./asset/psuedo-code/avl/balancing.txt"
+    };
+
+    std::vector<std::string> funcName = {
+        "Insert", "Find", "Delete", "Update", "Balance"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(941,531), sf::Vector2f(339,20),
+        14,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+
+    avlHandler.setCodeVisualizer(codeVisual);
 
     Scene::setup();
 }

@@ -1,5 +1,7 @@
 #include "../../include/UI/GUI-visual-handler.h"
+
 #include <math.h>
+#include <fstream>
 
 namespace GUI
 {
@@ -102,7 +104,7 @@ void TreeVisualHandler::recalHeight()
 void TreeVisualHandler::recalPos(int id,int cnt)
 {
     if (id == -1) return;
-    std::cerr << "Recalculate position of: " << id << " of count: " << cnt << '\n';
+    // std::cerr << "Recalculate position of: " << id << " of count: " << cnt << '\n';
     assert(nodeList.find(id) != nodeList.end());
     TreeNode &cur = nodeList[id];
 
@@ -121,9 +123,9 @@ void TreeVisualHandler::recalPos(int id,int cnt)
 
         int heightNodeIdx = cnt - (1 << cur.height) + 1;
 
-        std::cerr << "Height node debug: " << cnt << ' ' << cur.height << ' ' << '\n';
+        // std::cerr << "Height node debug: " << cnt << ' ' << cur.height << ' ' << '\n';
 
-        std::cerr << "Debug number: " << numNode << ' ' << startX << ' ' << endX << ' ' << stepX << ' ' << heightNodeIdx << '\n';
+        // std::cerr << "Debug number: " << numNode << ' ' << startX << ' ' << endX << ' ' << stepX << ' ' << heightNodeIdx << '\n';
 
         startX = startX + stepX * (heightNodeIdx - 1) + padding * (heightNodeIdx - 1);
         newPos = this->pos + sf::Vector2f(startX + stepX / 2, startY + cur.height * stepY);
@@ -146,23 +148,32 @@ void TreeVisualHandler::recalPos(int id,int cnt)
     }
 }
 
+TreeVisualHandler::TreeEdge TreeVisualHandler::calLinePosition(sf::Vector2f from, sf::Vector2f to)
+{
+    // Calculate the vector from the center to the edge in the direction pointing to each other
+    sf::Vector2f v1 = this->nodeRadius * (to - from).normalized();
+    sf::Vector2f v2 = this->nodeRadius * (from - to).normalized();
+
+    return TreeEdge(from + v1, to + v2);
+}
+
 void TreeVisualHandler::recalLine()
 {
     lineList.clear();
     for (std::pair<const int,TreeNode> &node : nodeList) {
         if (node.second.leftCh != -1)
-            lineList.push_back(TreeEdge(node.second.getPos(),
+            lineList.push_back(calLinePosition(node.second.getPos(),
                             nodeList[node.second.leftCh].getPos()));
         
         if (node.second.rightCh != -1)
-            lineList.push_back(TreeEdge(node.second.getPos(),
+            lineList.push_back(calLinePosition(node.second.getPos(),
                             nodeList[node.second.rightCh].getPos()));
     }
 }
 
 void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
 {
-    std::cerr << newStructure << '\n';
+    // std::cerr << newStructure << '\n';
     std::cerr << "Tree structure reset\n";
     this->root = newStructure.rootId;
 
@@ -188,7 +199,7 @@ void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
 
     std::cerr << "Tree structure reset complete\n";
     recalHeight();
-    std::cerr << "Tree visual height: " << this->curTreeHeight << '\n';
+    // std::cerr << "Tree visual height: " << this->curTreeHeight << '\n';
     recalPos(this->root);
     std::cerr << "Recal pos completed\n";
     std::cerr << "======================================================\n";
@@ -231,5 +242,129 @@ void TreeVisualHandler::clear()
     nodeList.clear();
     curTreeHeight = 0;
 }
+
+//======================================================//
+
+// Code visual handler implementation
+
+CodeVisualHandler::CodeVisualHandler(
+    sf::Vector2f pos,
+    sf::Vector2f lineSize,
+    int charSize,
+    std::vector<std::string> funcNames,
+    std::vector<std::string> filenames
+)
+{
+    this->pos = pos;
+    this->lineSize = lineSize;
+
+    this->charSize = charSize;
+    // this->maxLine = maxLine;
+    // this->numFunc = numFunc;
+
+    for (const std::string &file : filenames) {
+        loadCode(file);
+    }
+    this->funcNames = funcNames;
+
+    this->title = GUI::RectangleButton(
+        {110,29}, {pos.x + lineSize.x - 110, pos.y - 29},
+        "", 22, 0, 1,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::MAIN],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+
+    this->bg.setPosition(pos);
+    this->bg.setOutlineThickness(1);
+    this->bg.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+}
+
+void CodeVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    if (curFunc < 0) return;
+    target.draw(title,state);
+    target.draw(bg,state);
+    for (int i = 0; i < codeBg.size(); i++) target.draw(codeBg[i],state);
+    for (int i = 0; i < codeTexts.size(); i++) target.draw(codeTexts[i],state);
+    // std::cerr << codeTexts.size() << '\n';
+}
+
+void CodeVisualHandler::loadCode(const std::string &filename)
+{
+    std::cerr << "Loading code: " << filename << '\n';
+    std::string s;
+    std::ifstream inp(filename);
+    std::vector<std::string> code;
+    while (std::getline(inp,s)) {
+        // std::cerr << s << '\n';
+        code.push_back(s);
+    }
+    this->codes.push_back(code);
+}
+
+void CodeVisualHandler::generateVisual()
+{
+    if (curFunc < 0) return;
+    codeBg.clear();
+    codeTexts.clear();
+    std::cerr << "Generating visual of: ";
+    std::cerr << curFunc << ' ' << curLine << '\n';
+    sf::Vector2f size;
+    int numLine = codes[curFunc].size();
+    for (int i = 0; i < numLine; i++) {
+        sf::RectangleShape rect; 
+        rect.setSize(lineSize);
+        rect.setPosition({pos.x, pos.y + lineSize.y * i});
+        codeBg.push_back(rect);
+
+        sf::Text text(Global::codeFont);
+        text.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+        text.setCharacterSize(charSize);
+        text.setString(codes[curFunc][i]);
+        text.setOrigin({0, text.getLocalBounds().position.y + text.getLocalBounds().size.y * 0.5f});
+        text.setPosition(rect.getPosition() + sf::Vector2f(10, int(lineSize.y * 0.5f)));
+        // text.setPosition();
+        codeTexts.push_back(text);
+
+        // std::cerr << codes[curFunc][i] << ' ' << text.getPosition().x << ' ' << text.getPosition().y << '\n';
+    }
+    // std::cerr << codeTexts.size() << '\n';
+    bg.setSize({lineSize.x, lineSize.y * numLine});
+}
+
+void CodeVisualHandler::highlightCur()
+{
+    assert(curFunc >= 0 && curLine >= 0);
+    codeBg[curLine].setFillColor(Global::colorSet[0][Global::COLOR_TYPE::CODE_HIGHLIGHT]);
+}
+
+void CodeVisualHandler::unhighlightCur()
+{
+    assert(curFunc >= 0 && curLine >= 0);
+    codeBg[curLine].setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
+}
+
+void CodeVisualHandler::setFunc(int func)
+{
+    // std::cerr << func << ' ' << codes.size() << '\n';
+    curFunc = func;
+    if (func == -1) return; 
+    // assert(func > -1);
+    // assert(func < (int)codes.size());
+    title.setString(funcNames[curFunc]);
+    curLine = -1;
+    generateVisual();
+}
+
+void CodeVisualHandler::setLine(int line)
+{
+    if (curFunc < 0) return;
+    assert(line >= 0 && line < (int)codes[curFunc].size());
+    if (curLine >= 0) unhighlightCur();
+    curLine = line;
+    highlightCur();
+}
+
 
 }

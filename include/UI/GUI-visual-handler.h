@@ -40,15 +40,15 @@ public:
 class TreeVisualHandler : public sf::Drawable, public sf::Transformable
 {
 protected:
-    static constexpr float nodeRadius = 20;
-    static constexpr float padding = 20;
+    static constexpr float nodeRadius = 14;
+    static constexpr float padding = 7;
 
     class TreeNode : public Node
     {
     public:
         using Node::Node;
         using Node::getPos;
-        TreeNode() : Node({0,0},"",nodeRadius,15,0,3,2) {};
+        TreeNode() : Node({0,0},"",nodeRadius,14,0,3,2) {};
         int paId = -1;
         int height = -1;
         int leftCh = -1, rightCh = -1;
@@ -82,6 +82,8 @@ protected:
 
     std::vector<Line> lineList;
     std::vector<Animation*> animationList;
+
+    TreeEdge calLinePosition(sf::Vector2f from, sf::Vector2f to);
     void recalLine();
 
 public:
@@ -109,6 +111,50 @@ public:
 };
 
 //======================================================//
+
+class CodeVisualHandler : public sf::Drawable, public sf::Transformable
+{
+protected:
+
+    std::vector<std::vector<std::string>> codes;
+    std::vector<std::string> funcNames;
+
+    GUI::RectangleButton title;
+    std::vector<sf::Text> codeTexts;
+    sf::RectangleShape bg;
+    std::vector<sf::RectangleShape> codeBg;
+
+    int charSize = 14;
+    int curFunc = -1;
+    int curLine = -1;
+
+    sf::Vector2f pos, lineSize;
+    // int maxLine,numFunc;
+
+    void loadCode(const std::string &filename);
+
+    void generateVisual();
+    
+    void highlightCur();
+    void unhighlightCur();
+
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+public:
+
+    CodeVisualHandler(
+        sf::Vector2f pos,
+        sf::Vector2f lineSize,
+        int charSize,
+        std::vector<std::string> funcNames,
+        std::vector<std::string> filenames
+    );
+    ~CodeVisualHandler() = default;
+
+    void setFunc(int func);
+    void setLine(int line);
+
+};
 
 }
 
