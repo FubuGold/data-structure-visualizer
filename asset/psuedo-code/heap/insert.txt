@@ -1,0 +1,3 @@
+let id = a.size()
+insert a[id] = x
+upheap(id)

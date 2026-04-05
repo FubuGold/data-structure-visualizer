@@ -1,0 +1,5 @@
+find max node v
+if v == this: return
+else:
+    swap(a[this],a[v])
+    this = v

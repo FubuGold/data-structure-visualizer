@@ -59,18 +59,31 @@ public:
 class Heap : public BaseStructure
 {
 private:
-    std::vector<int> vec;
+    struct Node 
+    {
+        int id,val;
+        bool isHighlighted = false;
+        Node(){}
+        Node(int id,int val) : id(id), val(val) {}
+    };
+
+    std::vector<Node> vec;
     inline int findPa(int x);
     inline int findLt(int x);
     inline int findRt(int x);
-    void heapify(int id);
+    void downheap(int id);
+    void upheap(int id);
+
+    virtual void createSnapshot(int func,int line) override;
 
 public:
     ~Heap();
 
     void insert(int x) override;
-    std::optional<int> getMax();
-    void removeMax();
+    int getMax();
+    void pop();
+    void updateById(int id,int newVal);
+    void removeById(int id);
     void clear() override;
 
 };
@@ -94,7 +107,7 @@ private:
     // Include recalHeight at the start
     void balancing(Node *&cur);
 
-    // Get the max and delete node, with reconecting
+    // Get the max and remove node, with reconecting
     void findMax(Node *&cur, int& retVal);
     void insertRecur(int x,Node *&cur);
     bool removeRecur(int x,Node *&cur);

@@ -95,6 +95,28 @@ Heap::~Heap()
     this->clear();
 }
 
+void Heap::createSnapshot(int func,int line)
+{
+    // std::cerr << "Heap snapshot: " << func << ' ' << line << '\n';
+    snapshot_ptr->push_back(Global::TreeStructure());
+    Global::TreeStructure &tmp = snapshot_ptr->back();
+    tmp.codeFunction = func;
+    tmp.codeLine = line;
+    if (vec.empty()) {
+        tmp.rootId = -1;
+        return;
+    }
+    tmp.rootId = vec[0].id;
+    for (int i = 0; i < vec.size(); i++) {
+        tmp.valueMap[vec[i].id] = std::to_string(vec[i].val);
+        int ltId = findLt(i);
+        ltId = ltId >= vec.size() ? -1 : vec[ltId].id;
+        int rtId = findRt(i);
+        rtId = rtId >= vec.size() ? -1 : vec[rtId].id;
+        tmp.structureMap[vec[i].id] = std::make_tuple(ltId,rtId,vec[i].isHighlighted);
+    }
+}
+
 int Heap::findPa(int x)
 {
     return (x-1) / 2;
@@ -108,38 +130,114 @@ int Heap::findRt(int x)
     return x * 2 + 2;
 }
 
-void Heap::heapify(int id)
+void Heap::downheap(int id)
 {
     int lt = findLt(id);
     int rt = findRt(id);
+
+    vec[id].isHighlighted = true;
+    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),0);
+
     int minId = id;
-    if (lt < vec.size() && vec[lt] > vec[id]) minId = lt;
-    if (rt < vec.size() && vec[rt] > vec[id]) minId = rt;
-    if (minId == id) return;
+    if (lt < vec.size() && vec[lt].val > vec[minId].val) minId = lt;
+    if (rt < vec.size() && vec[rt].val > vec[minId].val) minId = rt;
+    
+    if (minId == id) {
+        vec[id].isHighlighted = false;
+        createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),1);
+        return;
+    }
     std::swap(vec[minId],vec[id]);
-    heapify(minId);
+    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),2);
+    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),3);
+    downheap(minId);
+    vec[id].isHighlighted = false;
+}
+
+void Heap::upheap(int id)
+{
+    while (true) {
+        vec[id].isHighlighted = true;
+        createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),0);
+        if (id != 0 && vec[findPa(id)].val < vec[id].val) {
+            std::swap(vec[findPa(id)], vec[id]);
+            createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),1);
+            vec[id].isHighlighted = false;
+            id = findPa(id);
+            createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),2);
+        }
+        else break;
+    }
+    vec[id].isHighlighted = false;
+    createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),-1);
 }
 
 void Heap::insert(int x)
 {
     counter++;
     int id = vec.size();
-    vec.push_back(x);
+    createSnapshot(toInt(Global::HEAP_FUNC::INSERT),0);
+    vec.emplace_back(counter,x);
+    vec.back().isHighlighted = true;
+    createSnapshot(toInt(Global::HEAP_FUNC::INSERT),1);
+    createSnapshot(toInt(Global::HEAP_FUNC::INSERT),2);
+    upheap(id);
 }
 
-std::optional<int> Heap::getMax()
+int Heap::getMax()
 {
-    std::optional<int> res;
-    if (vec.size()) res = vec[0];
-    return res;
+    if (vec.size()) {
+        return vec[0].val;
+    }
+    return -1;
 }
 
-void Heap::removeMax()
+void Heap::pop()
 {
-    if (vec.empty()) return;
+    if (vec.empty()) {
+        createSnapshot(toInt(Global::HEAP_FUNC::POP),0);
+        return;
+    }
     std::swap(vec[0],vec.back());
+    createSnapshot(toInt(Global::HEAP_FUNC::POP),1);
+    
     vec.pop_back();
-    heapify(0);
+    createSnapshot(toInt(Global::HEAP_FUNC::POP),2);
+    if (vec.empty()) return;
+    createSnapshot(toInt(Global::HEAP_FUNC::POP),3);
+    downheap(0);
+}
+
+void Heap::updateById(int id,int newVal)
+{
+    if (id >= vec.size()) return;
+    int preVal = vec[id].val;
+    vec[id].isHighlighted = true;
+    createSnapshot(toInt(Global::HEAP_FUNC::UPDATE_BY_ID),0);
+    vec[id].val = newVal;
+    createSnapshot(toInt(Global::HEAP_FUNC::UPDATE_BY_ID),1);
+    if (preVal > newVal) {
+        createSnapshot(toInt(Global::HEAP_FUNC::UPDATE_BY_ID),2);
+        downheap(id);
+    }
+    else {
+        createSnapshot(toInt(Global::HEAP_FUNC::UPDATE_BY_ID),3);
+        upheap(id);
+    }
+}
+
+void Heap::removeById(int id)
+{
+    while (true) {
+        createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),0);
+        if (id == 0) break;
+        std::swap(vec[findPa(id)],vec[id]);
+        createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),1);
+        id = findPa(id);
+        createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),2);
+    }
+    createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),3);
+    Heap::pop();
 }
 
 void Heap::clear()
@@ -233,7 +331,10 @@ void AVLTree::balancing(Node *&cur)
     int ltH = cur->leftHeight(), rtH = cur->rightHeight();
     // std::cerr << "Balancing: " << cur->id << ' ' << ltH << ' ' << rtH << '\n';
     createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 0);
-    if (ltH - rtH >= -1 && ltH - rtH <= 1) return;
+    if (ltH - rtH >= -1 && ltH - rtH <= 1) {
+        createSnapshot(toInt(Global::AVL_FUNC::BALANCE), 5);
+        return;
+    }
 
     // std::cerr << "Balancing called \n";
 
@@ -269,7 +370,7 @@ void AVLTree::findMax(Node *&cur, int& retVal)
     if (cur->rtCh) {
         findMax(cur->rtCh, retVal);
         cur->ishighlighted = false;
-        createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
+        createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 1);
         return;
     }
     cur->ishighlighted = false;
@@ -278,7 +379,7 @@ void AVLTree::findMax(Node *&cur, int& retVal)
     delete cur;
     cur = tmp;
 
-    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
+    createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 1);
 
     return;
 }
@@ -326,7 +427,7 @@ bool AVLTree::removeRecur(int x,Node *&cur)
 {
     if (!cur) return false;
     cur->ishighlighted = true;
-    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 0);
+    createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 0);
     bool res = 0;
     if (x < cur->val) {
         res = removeRecur(x, cur->ltCh);
@@ -335,37 +436,37 @@ bool AVLTree::removeRecur(int x,Node *&cur)
         res = removeRecur(x,cur->rtCh);
     }
     else {
-        createSnapshot(toInt(Global::AVL_FUNC::DELETE), 1);
+        createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 1);
         if (!cur->ltCh) {
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 2);
             Node *tmp = cur->rtCh;
             delete cur;
             cur = tmp;
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 3);
         }
         else if (!cur->rtCh) {
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 2);
             Node *tmp = cur->ltCh;
             delete cur;
             cur = tmp;
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 3);
         }
         else {
             int tmpVal = INT_MIN;
             findMax(cur->ltCh,tmpVal);
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 2);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 2);
             cur->val = tmpVal;
-            createSnapshot(toInt(Global::AVL_FUNC::DELETE), 3);
+            createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 3);
         }
         res = 1;
     }
 
-    createSnapshot(toInt(Global::AVL_FUNC::DELETE), 4);
+    createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 4);
     if (cur) {
         cur->ishighlighted = false;
         balancing(cur);
     }
-    if (cur == root) createSnapshot(toInt(Global::AVL_FUNC::DELETE), 4);
+    if (cur == root) createSnapshot(toInt(Global::AVL_FUNC::REMOVE), 4);
 
     return res;
 }

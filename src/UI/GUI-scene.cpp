@@ -23,7 +23,7 @@ template<typename T>
 requires std::derived_from<T,sf::Drawable>
 void Scene::addElement(std::shared_ptr<T> element_ptr)
 {
-    std::cerr << "Adding element\n";
+    // std::cerr << "Adding element\n";
     elements.push_back(std::static_pointer_cast<sf::Drawable>(element_ptr));
     if constexpr (std::derived_from<T,IInteractableElement>) {
         interactableElements.push_back(std::dynamic_pointer_cast<IInteractableElement>(element_ptr));
@@ -214,9 +214,9 @@ void MenuScene::setup()
         sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
     );
     heapButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
-
+        Global::curAppState = Global::SceneState::HEAP;
     });
-    addElement(sllButton);
+    addElement(heapButton);
 
     std::shared_ptr<GUI::RectangleButton> heapTitle = std::make_shared<GUI::RectangleButton>(
         sf::Vector2f(346,68), sf::Vector2f(467,383),
@@ -665,13 +665,13 @@ void AVLScene::setup()
     std::vector<std::string> codeFilename = {
         "./asset/psuedo-code/avl/insert.txt",
         "./asset/psuedo-code/avl/find.txt",
-        "./asset/psuedo-code/avl/delete.txt",
+        "./asset/psuedo-code/avl/remove.txt",
         "./asset/psuedo-code/avl/update.txt",
-        "./asset/psuedo-code/avl/balancing.txt"
+        "./asset/psuedo-code/avl/balance.txt"
     };
 
     std::vector<std::string> funcName = {
-        "Insert", "Find", "Delete", "Update", "Balance"
+        "Insert", "Find", "Remove", "Update", "Balance"
     };
     
     std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
@@ -689,6 +689,129 @@ void AVLScene::setup()
 void AVLScene::loopUpdate()
 {
     avlHandler.loop();
+}
+
+//======================================================//
+
+// AVL scene implementation
+
+void HeapScene::setup()
+{
+    VisualScene::setup();
+
+    std::cerr << "AVL scene setup start\n";
+
+    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
+    heapHandler.setVisualizer(treeVisual);
+    addElement(treeVisual);
+
+    heapHandler.setAnimationSlider(this->animationSlider);
+    this->animationSlider->lock();
+
+    heapHandler.addLockableElement(this->insertBtn);
+    heapHandler.addLockableElement(this->removeBtn);
+    heapHandler.addLockableElement(this->findBtn);
+    heapHandler.addLockableElement(this->updateBtn);
+    heapHandler.addLockableElement(this->clearBtn);
+    heapHandler.addLockableElement(this->randomBtn);
+    heapHandler.addLockableElement(this->inputField);
+    heapHandler.addLockableElement(this->updField);
+    heapHandler.addLockableElement(this->fileBtn);
+    heapHandler.addLockableElement(this->fullUndoBtn);
+    heapHandler.addLockableElement(this->undoBtn);
+    heapHandler.addLockableElement(this->redoBtn);
+    // heapHandler.addLockableElement(this->fullRedoBtn);
+
+    
+    this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->heapHandler.insert(num);
+    });
+
+    this->removeBtn->setString("Id remove");
+    this->removeBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->heapHandler.removeById(num);
+    });
+
+    // Find button is now for pop function
+    this->findBtn->setString("Pop");
+    this->findBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        // std::string value = this->inputField->getValue();
+        // if (value == "") return;
+        // int num = stringToInt(value);
+        this->heapHandler.pop();
+    });
+
+    this->updateBtn->setString("Id update");
+    this->updateBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        std::string newValue = this->updField->getValue();
+        if (value == "" || newValue == "") return;
+        this->heapHandler.updateById(stringToInt(value), stringToInt(newValue));
+    });
+
+    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.random();
+        this->heapHandler.endAnimation();
+    });
+
+    this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.clear();
+    });
+
+    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.fullUndo();
+    });
+
+    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.endAnimation();
+    });
+
+    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.undo();
+    });
+
+    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.redo();
+    });
+
+    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.file();
+    });
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/heap/insert.txt",
+        "./asset/psuedo-code/heap/pop.txt",
+        "./asset/psuedo-code/heap/updateById.txt",
+        "./asset/psuedo-code/heap/removeById.txt",
+        "./asset/psuedo-code/heap/downheap.txt",
+        "./asset/psuedo-code/heap/upheap.txt"
+    };
+
+    std::vector<std::string> funcName = {
+        "Insert", "Pop", "Id update", "Id remove", "Downheap", "Upheap"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(941,531), sf::Vector2f(339,20),
+        14,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+
+    heapHandler.setCodeVisualizer(codeVisual);
+
+    Scene::setup();
+}
+
+void HeapScene::loopUpdate()
+{
+    heapHandler.loop();
 }
 
 }

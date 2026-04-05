@@ -1,5 +1,0 @@
-find v
-find max child
-swap max child and v
-delete v
-balancing

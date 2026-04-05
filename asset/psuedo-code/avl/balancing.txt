@@ -1,5 +1,0 @@
-check balancing:
-    left-right: left rotate, right rotate
-    left-left: right rotate
-    right-left: right rotate, left rotate
-    right-right: left rotate

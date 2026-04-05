@@ -49,10 +49,21 @@ inline const sf::Color colorSet[1][6] =  {
 enum class AVL_FUNC {
     INSERT,
     FIND,
-    DELETE,
+    REMOVE,
     UPDATE,
     BALANCE
 };
+
+enum class HEAP_FUNC {
+    INSERT,
+    POP,
+    UPDATE_BY_ID,
+    REMOVE_BY_ID,
+    DOWNHEAP,
+    UPHEAP
+};
+
+using TrieChild_t = std::pair<bool, std::vector<std::pair<int,char>>>;
 
 struct TreeStructure
 {
@@ -61,6 +72,7 @@ struct TreeStructure
     int rootId;
     std::map<int,std::string> valueMap;
     std::map<int,std::tuple<int,int,bool>> structureMap;
+    std::map<int,TrieChild_t> trieMap;
     friend std::ostream& operator << (std::ostream &out, TreeStructure treeStruct) {
         out << "Tree structure debug\n";
         out << treeStruct.rootId << ' ' << treeStruct.valueMap.size() << ' ' << treeStruct.structureMap.size() << '\n';

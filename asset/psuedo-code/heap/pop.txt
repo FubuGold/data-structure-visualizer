@@ -1,0 +1,4 @@
+if a.empty(): return
+swap(a[0],a.back())
+a.pop_back()
+heapify(0)

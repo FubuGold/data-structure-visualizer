@@ -173,8 +173,8 @@ void TreeVisualHandler::recalLine()
 
 void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
 {
-    // std::cerr << newStructure << '\n';
     std::cerr << "Tree structure reset\n";
+    // std::cerr << newStructure << '\n';
     this->root = newStructure.rootId;
 
     // Insert and update
@@ -186,6 +186,8 @@ void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
         if (curNode.leftCh != -1) this->nodeList[curNode.leftCh].paId = newNode.first;
         if (curNode.rightCh != -1) this->nodeList[curNode.rightCh].paId = newNode.first;
         
+        // std::cerr << newNode.first << ' ' << newStructure.valueMap[newNode.first] << '\n';
+
         curNode.setValue(newStructure.valueMap[newNode.first]);
     }
 
@@ -360,10 +362,10 @@ void CodeVisualHandler::setFunc(int func)
 void CodeVisualHandler::setLine(int line)
 {
     if (curFunc < 0) return;
-    assert(line >= 0 && line < (int)codes[curFunc].size());
+    assert(line < (int)codes[curFunc].size());
     if (curLine >= 0) unhighlightCur();
     curLine = line;
-    highlightCur();
+    if (curLine >= 0) highlightCur();
 }
 
 

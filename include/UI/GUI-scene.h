@@ -105,6 +105,20 @@ public:
 
 };
 
+class HeapScene : public VisualScene
+{
+protected:
+
+    std::shared_ptr<GUI::TreeVisualHandler> treeVisual;
+    Handler::HeapHandler heapHandler;
+
+public:
+
+    void setup() override;
+    void loopUpdate() override;
+
+};
+
 class AVLScene : public VisualScene
 {
 protected:

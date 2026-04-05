@@ -1,2 +1,2 @@
-if delete v:
+if remove v:
     insert newV

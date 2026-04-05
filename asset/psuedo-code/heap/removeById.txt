@@ -1,0 +1,4 @@
+while id != 0:
+    swap(a[pa(id)], a[id])
+    id = pa(id)
+pop()

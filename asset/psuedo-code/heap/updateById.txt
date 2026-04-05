@@ -1,0 +1,4 @@
+let preVal = a[id].val
+a[id].val = newVal
+if preVal > newVal: downheap(id)
+else upheap(id)

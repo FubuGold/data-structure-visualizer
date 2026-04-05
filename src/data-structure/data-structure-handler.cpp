@@ -30,7 +30,7 @@ void AVLTreeHandler::preprocessing()
     AVLTreeHandler::endAnimation();
     snapshot.clear();
     animationLock = 1;
-    std::cerr << "Done preprocessing\n";
+    // std::cerr << "Done preprocessing\n";
 }
 
 void AVLTreeHandler::postprocessing()
@@ -38,7 +38,7 @@ void AVLTreeHandler::postprocessing()
     curSnapshot = 0;
     delaying = false;
     lockElement();
-    std::cerr << "Post processing\n";
+    // std::cerr << "Post processing\n";
     if (snapshot.size()) {
         setSnapshot(0);
     }
@@ -252,9 +252,208 @@ HeapHandler::HeapHandler()
     tree.linkSnapshot(&snapshot);
 }
 
+void HeapHandler::preprocessing()
+{
+    HeapHandler::endAnimation();
+    snapshot.clear();
+    animationLock = 1;
+    std::cerr << "Done preprocessing\n";
+}
+
+void HeapHandler::postprocessing()
+{
+    curSnapshot = 0;
+    delaying = false;
+    lockElement();
+    std::cerr << "Post processing\n";
+    if (snapshot.size()) {
+        setSnapshot(0);
+    }
+
+    animationSlider->setNewRange(0, std::max(0,(int)snapshot.size()-1), std::max(0,(int)snapshot.size()-1));
+    animationSlider->setValue(0);
+}
+
+void HeapHandler::lockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        lockableElement[i]->lock();
+    }
+}
+
+void HeapHandler::unlockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        lockableElement[i]->unlock();
+    }
+}
+
+void HeapHandler::setSnapshot(int id)
+{
+    std::cerr << "Setting snapshot: " << id << ' ' << snapshot[id].codeFunction << ' ' << snapshot[id].codeLine << '\n';
+    visualizer->setTreeStructure(snapshot[id]);
+    animationSlider->setValue(id);
+    codeVisualizer->setFunc(snapshot[id].codeFunction);
+    codeVisualizer->setLine(snapshot[id].codeLine);
+}
+
 void HeapHandler::setVisualizer(std::shared_ptr<GUI::TreeVisualHandler> visualizer_p)
 {
     this->visualizer = visualizer_p;
+}
+void HeapHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
+{
+    this->animationSlider = animationSlider_p;
+}
+void HeapHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
+{
+    this->codeVisualizer = codeVisualizer_p;
+}
+
+void HeapHandler::addLockableElement(std::shared_ptr<GUI::IInteractableElement> element)
+{
+    this->lockableElement.push_back(element);
+}
+
+void HeapHandler::loop()
+{
+    visualizer->updateAnimation();
+    if (!animationLock) return;
+    if (visualizer->isAnimationEnd()) {
+        if (delayClock.getElapsedTime().asSeconds() <= DELAY_TIME) return;
+        if (curSnapshot >= (int)snapshot.size() - 1) {
+            if (animationLock) {
+                animationLock = 0;
+                unlockElement();
+            }
+            return;
+        }
+        curSnapshot++;
+        setSnapshot(curSnapshot);
+        delayClock.restart();
+    }
+    else delayClock.restart();
+}
+
+void HeapHandler::endAnimation()
+{
+    // std::cerr << "End animation called\n";
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot.back());
+        setSnapshot(snapshot.size()-1);
+        visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = std::max(0,(int)snapshot.size() - 1);
+    animationLock = 0;
+    // std::cerr << "After if " << curSnapshot << '\n';
+    // std::cerr << "animationSlider" << '\n';
+    animationSlider->setValue(curSnapshot);
+    
+    unlockElement();
+}
+
+void HeapHandler::fullUndo()
+{
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot[0]);
+        setSnapshot(0);
+        visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = 0;
+    animationLock = 0;
+    // animationSlider->setValue(curSnapshot); 
+}
+
+void HeapHandler::undo()
+{
+    if (curSnapshot > 0) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        visualizer->endAnimation();
+        curSnapshot--;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void HeapHandler::redo()
+{
+    if (curSnapshot < (int)snapshot.size()-1) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        visualizer->endAnimation();
+        curSnapshot++;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void HeapHandler::insert(int x)
+{
+    preprocessing();
+    tree.insert(x);
+    postprocessing();
+}
+
+void HeapHandler::pop()
+{
+    preprocessing();
+    tree.pop();
+    postprocessing();
+}
+
+void HeapHandler::updateById(int id,int newVal)
+{
+    preprocessing();
+    tree.updateById(id,newVal);
+    postprocessing();
+}
+
+void HeapHandler::removeById(int id)
+{
+    preprocessing();
+    tree.removeById(id);
+    postprocessing();
+}
+
+void HeapHandler::random()
+{
+    int n = rng(10,20);
+    preprocessing();
+    for (int i = 0; i < n; i++) {
+        tree.insert(rng(VALUE_MIN,VALUE_MAX));
+    }
+    postprocessing();
+    endAnimation();
+}
+
+void HeapHandler::clear()
+{
+    tree.clear();
+    snapshot.clear();
+    visualizer->clear();
+    curSnapshot = 0;
+}
+
+void HeapHandler::file()
+{
+    std::string filename = Global::openFile();
+    if (filename == "") return;
+    if (!Validator::heapValidator(filename)) return;
+    
+    preprocessing();
+
+    std::ifstream inp(filename);
+    int n; inp >> n;
+    for (int i = 0; i < n; i++) {
+        int x; inp >> x;
+        tree.insert(x);
+    }
+
+    postprocessing();
+    // endAnimation();
 }
 
 }
