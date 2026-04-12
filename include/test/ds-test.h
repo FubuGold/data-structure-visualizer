@@ -3,5 +3,6 @@
 
 void avlTest();
 void heapTest();
+void sllTest();
 
 #endif // DATA_STRUCTURE_TEST

@@ -37,14 +37,32 @@ enum COLOR_TYPE {
     MAIN,
     HIGHLIGHT,
     DISABLE,
-    CODE_HIGHLIGHT
+    CODE_HIGHLIGHT,
+    SPECIAL
 };
 
-inline const sf::Color colorSet[1][6] =  {
-    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x539F64FF), sf::Color(0xF94842FF), sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF)}
+inline const sf::Color colorSet[1][7] =  {
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x539F64FF), sf::Color(0xF94842FF),
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA180)}
 };
 
 //======================================================//
+
+enum class SLL_FUNC {
+    INSERT,
+    FIND,
+    REMOVE,
+    UPDATE
+};
+
+enum class HEAP_FUNC {
+    INSERT,
+    POP,
+    REMOVE_BY_ID,
+    UPDATE_BY_ID,
+    DOWNHEAP,
+    UPHEAP
+};
 
 enum class AVL_FUNC {
     INSERT,
@@ -54,16 +72,7 @@ enum class AVL_FUNC {
     BALANCE
 };
 
-enum class HEAP_FUNC {
-    INSERT,
-    POP,
-    UPDATE_BY_ID,
-    REMOVE_BY_ID,
-    DOWNHEAP,
-    UPHEAP
-};
-
-using TrieChild_t = std::pair<bool, std::vector<std::pair<int,char>>>;
+using TrieChild_t = std::tuple<bool, bool, std::vector<std::pair<int,char>>>;
 
 struct TreeStructure
 {

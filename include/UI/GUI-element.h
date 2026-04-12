@@ -69,8 +69,11 @@ protected:
     sf::Text text;
 
     sf::Vector2f pos;
+    sf::Color bgColor;
+    sf::Color specialColor;
 
     bool isHighlighted;
+    bool isSpecial;
 
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
@@ -87,7 +90,8 @@ public:
         sf::Color bgColor = sf::Color::Transparent,
         sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
         sf::Color borderColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
-        sf::Color highlightedColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT]
+        sf::Color highlightedColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT],
+        sf::Color specialColor = Global::colorSet[0][Global::COLOR_TYPE::SPECIAL]
     );
     ~Node() = default;
 
@@ -96,6 +100,7 @@ public:
     void setValue(std::string value);
     sf::Vector2f getPos();
     void setHighlighted(bool value);
+    void setSpecial(bool value);
 };
 
 //======================================================//
@@ -109,17 +114,25 @@ public:
 class Line : public sf::Drawable, public sf::Transformable
 {
 protected:
+
+    static constexpr float arrowRad = 6;
+
+    sf::CircleShape arrowHead;
     sf::Vector2f startPos,endPos;
     sf::RectangleShape line;
     int lineThickness;
 
+    sf::Color normalColor, highlightColor;
     sf::Text text;
     
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
     void setupLine();
 
+    bool directed = true;
+
 public:
+
     Line(
         sf::Vector2f startPos,
         sf::Vector2f endPos,
@@ -128,10 +141,17 @@ public:
         int textSize = 20,
         int textOutlineThickness = 2,
         sf::Color lineColor = sf::Color::Black,
+        sf::Color highlightColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT],
         sf::Color textColor = sf::Color::Black,
-        sf::Color textOutlineColour = sf::Color::White
+        sf::Color textOutlineColour = sf::Color::White,
+        bool directed = true
     );
     ~Line() = default;
+
+    void highlight();
+    void unhighlight();
+
+    void setString(const std::string &s);
 
     void setStartPos(sf::Vector2f newStartPos);
     void setEndPos(sf::Vector2f newEndPos);

@@ -189,7 +189,7 @@ void MenuScene::setup()
         sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
     );
     sllButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
-
+        Global::curAppState = Global::SceneState::SLL;
     });
     addElement(sllButton);
 
@@ -575,6 +575,248 @@ void VisualScene::setup()
 
 //======================================================//
 
+// SLL scene implementation
+
+void SLLScene::setup()
+{
+    VisualScene::setup();
+
+    std::cerr << "AVL scene setup start\n";
+
+    this->listVisual = std::make_shared<GUI::SLLVisualHandler>(
+        sf::Vector2f{1280, 640}, sf::Vector2f(0, 80), 320, 30, 60
+    );
+    sllHandler.setVisualizer(listVisual);
+    addElement(listVisual);
+
+    sllHandler.setAnimationSlider(this->animationSlider);
+    this->animationSlider->lock();
+
+    sllHandler.addLockableElement(this->insertBtn);
+    sllHandler.addLockableElement(this->removeBtn);
+    sllHandler.addLockableElement(this->findBtn);
+    sllHandler.addLockableElement(this->updateBtn);
+    sllHandler.addLockableElement(this->clearBtn);
+    sllHandler.addLockableElement(this->randomBtn);
+    sllHandler.addLockableElement(this->inputField);
+    sllHandler.addLockableElement(this->updField);
+    sllHandler.addLockableElement(this->fileBtn);
+    sllHandler.addLockableElement(this->fullUndoBtn);
+    sllHandler.addLockableElement(this->undoBtn);
+    sllHandler.addLockableElement(this->redoBtn);
+    // sllHandler.addLockableElement(this->fullRedoBtn);
+
+    
+    this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->sllHandler.insert(num);
+    });
+
+    this->removeBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->sllHandler.remove(num);
+    });
+
+    this->findBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->sllHandler.find(num);
+    });
+
+    this->updateBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        std::string newValue = this->updField->getValue();
+        if (value == "" || newValue == "") return;
+        this->sllHandler.update(stringToInt(value), stringToInt(newValue));
+    });
+
+    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.random();
+        this->sllHandler.endAnimation();
+    });
+
+    this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.clear();
+    });
+
+    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.fullUndo();
+    });
+
+    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.endAnimation();
+    });
+
+    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.undo();
+    });
+
+    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.redo();
+    });
+
+    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->sllHandler.file();
+    });
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/sll/insert.txt",
+        "./asset/psuedo-code/sll/find.txt",
+        "./asset/psuedo-code/sll/remove.txt",
+        "./asset/psuedo-code/sll/update.txt"
+    };
+
+    std::vector<std::string> funcName = {
+        "Insert", "Find", "Remove", "Update"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(870,531), sf::Vector2f(410,20),
+        14,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+
+    sllHandler.setCodeVisualizer(codeVisual);
+
+    Scene::setup();
+}
+
+void SLLScene::loopUpdate()
+{
+    sllHandler.loop();
+}
+
+//======================================================//
+
+// Heap scene implementation
+
+void HeapScene::setup()
+{
+    VisualScene::setup();
+
+    std::cerr << "AVL scene setup start\n";
+
+    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
+    heapHandler.setVisualizer(treeVisual);
+    addElement(treeVisual);
+
+    heapHandler.setAnimationSlider(this->animationSlider);
+    this->animationSlider->lock();
+
+    heapHandler.addLockableElement(this->insertBtn);
+    heapHandler.addLockableElement(this->removeBtn);
+    heapHandler.addLockableElement(this->findBtn);
+    heapHandler.addLockableElement(this->updateBtn);
+    heapHandler.addLockableElement(this->clearBtn);
+    heapHandler.addLockableElement(this->randomBtn);
+    heapHandler.addLockableElement(this->inputField);
+    heapHandler.addLockableElement(this->updField);
+    heapHandler.addLockableElement(this->fileBtn);
+    heapHandler.addLockableElement(this->fullUndoBtn);
+    heapHandler.addLockableElement(this->undoBtn);
+    heapHandler.addLockableElement(this->redoBtn);
+    // heapHandler.addLockableElement(this->fullRedoBtn);
+
+    
+    this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->heapHandler.insert(num);
+    });
+
+    this->removeBtn->setString("Id remove");
+    this->removeBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        int num = stringToInt(value);
+        this->heapHandler.removeById(num);
+    });
+
+    // Find button is now for pop function
+    this->findBtn->setString("Pop");
+    this->findBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        // std::string value = this->inputField->getValue();
+        // if (value == "") return;
+        // int num = stringToInt(value);
+        this->heapHandler.pop();
+    });
+
+    this->updateBtn->setString("Id update");
+    this->updateBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        std::string newValue = this->updField->getValue();
+        if (value == "" || newValue == "") return;
+        this->heapHandler.updateById(stringToInt(value), stringToInt(newValue));
+    });
+
+    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.random();
+        this->heapHandler.endAnimation();
+    });
+
+    this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.clear();
+    });
+
+    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.fullUndo();
+    });
+
+    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.endAnimation();
+    });
+
+    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.undo();
+    });
+
+    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.redo();
+    });
+
+    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->heapHandler.file();
+    });
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/heap/insert.txt",
+        "./asset/psuedo-code/heap/pop.txt",
+        "./asset/psuedo-code/heap/removeById.txt",
+        "./asset/psuedo-code/heap/updateById.txt",
+        "./asset/psuedo-code/heap/downheap.txt",
+        "./asset/psuedo-code/heap/upheap.txt"
+    };
+
+    std::vector<std::string> funcName = {
+        "Insert", "Pop", "Id remove", "Id update", "Downheap", "Upheap"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(941,531), sf::Vector2f(339,20),
+        14,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+
+    heapHandler.setCodeVisualizer(codeVisual);
+
+    Scene::setup();
+}
+
+void HeapScene::loopUpdate()
+{
+    heapHandler.loop();
+}
+
+//======================================================//
+
 // AVL scene implementation
 
 void AVLScene::setup()
@@ -691,127 +933,6 @@ void AVLScene::loopUpdate()
     avlHandler.loop();
 }
 
-//======================================================//
 
-// AVL scene implementation
-
-void HeapScene::setup()
-{
-    VisualScene::setup();
-
-    std::cerr << "AVL scene setup start\n";
-
-    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
-    heapHandler.setVisualizer(treeVisual);
-    addElement(treeVisual);
-
-    heapHandler.setAnimationSlider(this->animationSlider);
-    this->animationSlider->lock();
-
-    heapHandler.addLockableElement(this->insertBtn);
-    heapHandler.addLockableElement(this->removeBtn);
-    heapHandler.addLockableElement(this->findBtn);
-    heapHandler.addLockableElement(this->updateBtn);
-    heapHandler.addLockableElement(this->clearBtn);
-    heapHandler.addLockableElement(this->randomBtn);
-    heapHandler.addLockableElement(this->inputField);
-    heapHandler.addLockableElement(this->updField);
-    heapHandler.addLockableElement(this->fileBtn);
-    heapHandler.addLockableElement(this->fullUndoBtn);
-    heapHandler.addLockableElement(this->undoBtn);
-    heapHandler.addLockableElement(this->redoBtn);
-    // heapHandler.addLockableElement(this->fullRedoBtn);
-
-    
-    this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        std::string value = this->inputField->getValue();
-        if (value == "") return;
-        int num = stringToInt(value);
-        this->heapHandler.insert(num);
-    });
-
-    this->removeBtn->setString("Id remove");
-    this->removeBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        std::string value = this->inputField->getValue();
-        if (value == "") return;
-        int num = stringToInt(value);
-        this->heapHandler.removeById(num);
-    });
-
-    // Find button is now for pop function
-    this->findBtn->setString("Pop");
-    this->findBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        // std::string value = this->inputField->getValue();
-        // if (value == "") return;
-        // int num = stringToInt(value);
-        this->heapHandler.pop();
-    });
-
-    this->updateBtn->setString("Id update");
-    this->updateBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        std::string value = this->inputField->getValue();
-        std::string newValue = this->updField->getValue();
-        if (value == "" || newValue == "") return;
-        this->heapHandler.updateById(stringToInt(value), stringToInt(newValue));
-    });
-
-    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.random();
-        this->heapHandler.endAnimation();
-    });
-
-    this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.clear();
-    });
-
-    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.fullUndo();
-    });
-
-    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.endAnimation();
-    });
-
-    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.undo();
-    });
-
-    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.redo();
-    });
-
-    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
-        this->heapHandler.file();
-    });
-
-    std::vector<std::string> codeFilename = {
-        "./asset/psuedo-code/heap/insert.txt",
-        "./asset/psuedo-code/heap/pop.txt",
-        "./asset/psuedo-code/heap/updateById.txt",
-        "./asset/psuedo-code/heap/removeById.txt",
-        "./asset/psuedo-code/heap/downheap.txt",
-        "./asset/psuedo-code/heap/upheap.txt"
-    };
-
-    std::vector<std::string> funcName = {
-        "Insert", "Pop", "Id update", "Id remove", "Downheap", "Upheap"
-    };
-    
-    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
-        sf::Vector2f(941,531), sf::Vector2f(339,20),
-        14,
-        funcName, codeFilename
-    );
-    addElement(codeVisual);
-
-    heapHandler.setCodeVisualizer(codeVisual);
-
-    Scene::setup();
-}
-
-void HeapScene::loopUpdate()
-{
-    heapHandler.loop();
-}
 
 }

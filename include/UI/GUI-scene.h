@@ -105,6 +105,19 @@ public:
 
 };
 
+class SLLScene : public VisualScene
+{
+protected:
+
+    std::shared_ptr<GUI::SLLVisualHandler> listVisual;
+    Handler::SLLHandler sllHandler;
+
+public:
+
+    void setup() override;
+    void loopUpdate() override;
+};
+
 class HeapScene : public VisualScene
 {
 protected:

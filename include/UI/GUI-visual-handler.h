@@ -40,8 +40,8 @@ public:
 class TreeVisualHandler : public sf::Drawable, public sf::Transformable
 {
 protected:
-    static constexpr float nodeRadius = 14;
-    static constexpr float padding = 7;
+    static constexpr float nodeRadius = 15;
+    static constexpr float padding = 8;
 
     class TreeNode : public Node
     {
@@ -52,6 +52,7 @@ protected:
         int paId = -1;
         int height = -1;
         int leftCh = -1, rightCh = -1;
+        bool isHighlighted = 0;
     };
     class TreeEdge : public Line
     {
@@ -80,7 +81,7 @@ protected:
     void recalHeight();
     void recalPos(int id,int cnt = 1);
 
-    std::vector<Line> lineList;
+    std::vector<TreeEdge> lineList;
     std::vector<Animation*> animationList;
 
     TreeEdge calLinePosition(sf::Vector2f from, sf::Vector2f to);
@@ -97,6 +98,152 @@ public:
      */
     TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
     ~TreeVisualHandler() = default;
+
+    void setTreeStructure(Global::TreeStructure &newStructure);
+
+    void updateAnimation();
+
+    void endAnimation();
+
+    bool isAnimationEnd();
+
+    void clear();
+
+};
+
+//======================================================//
+
+class SLLVisualHandler : public sf::Drawable, public sf::Transformable
+{
+protected:
+    static constexpr float nodeRadius = 15;
+    // static constexpr float padding = 7;
+
+    class StructNode : public Node
+    {
+    public:
+        using Node::Node;
+        using Node::getPos;
+        StructNode() : Node({0,0},"",nodeRadius,15,0,3,2) {};
+        int prevId = -1;
+        int nxt = -1;
+        int isHighlighted = 0;
+    };
+    class StructLine : public Line
+    {
+    public:
+        using Line::Line;
+        StructLine() : Line({0,0},{0,0}) {};
+        int fromId = -1, toId = -1;
+    };
+
+    std::map<int,StructNode> nodeList;
+
+    sf::RectangleShape background;
+
+    sf::Vector2f pos, size;
+
+    float yLine, startX, stepX;
+
+    int curTreeHeight = 0;
+
+    int root = 0;
+    
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+    void recalPos();
+
+    std::vector<StructLine> lineList;
+    std::vector<Animation*> animationList;
+
+    StructLine calLinePosition(sf::Vector2f from, sf::Vector2f to);
+    void recalLine();
+
+public:
+    /**
+     * @brief Construct a new Tree Visual Handler object
+     * 
+     * @param size 
+     * @param pos 
+     * @param yLine is relative to the top left corner of the visual
+     * @param startX is relative to the top left corner of the visual
+     * @param stepX 
+     */
+    SLLVisualHandler(sf::Vector2f size, sf::Vector2f pos, int yLine = 80, int startX = 51,int stepX = 51);
+    ~SLLVisualHandler() = default;
+
+    void setTreeStructure(Global::TreeStructure &newStructure);
+
+    void updateAnimation();
+
+    void endAnimation();
+
+    bool isAnimationEnd();
+
+    void clear();
+
+};
+
+//======================================================//
+
+class TrieVisualHandler : public sf::Drawable, public sf::Transformable
+{
+protected:
+    static constexpr float nodeRadius = 15;
+    static constexpr float padding = 7;
+
+    class TrieNode : public Node
+    {
+    public:
+        using Node::Node;
+        using Node::getPos;
+        TrieNode() : Node({0,0},"",nodeRadius,15,0,3,2) {};
+        int paId = -1;
+        int ch[26];
+        int isHighlighted = 0;
+    };
+    class TrieEdge : public Line
+    {
+    public:
+        using Line::Line;
+        TrieEdge() : Line({0,0},{0,0}) {};
+        int fromId = -1, toId = -1;
+    };
+
+    std::map<int,TrieNode> nodeList;
+
+    sf::RectangleShape background;
+
+    sf::Vector2f pos, size;
+
+    float centerLine, stepY, startY;
+
+    int curTreeHeight = 0;
+
+    int root = 0;
+    
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+    void recalPos(int id);
+
+    std::vector<TrieEdge> lineList;
+    std::vector<Animation*> animationList;
+
+    TrieEdge calLinePosition(sf::Vector2f from, sf::Vector2f to);
+    void recalLine();
+
+public:
+    /**
+     * @brief Construct a new Tree Visual Handler object
+     * 
+     * @param size 
+     * @param pos 
+     * @param yLine is relative to the top left corner of the visual
+     * @param startX is relative to the top left corner of the visual
+     * @param stepX 
+     */
+    TrieVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
+    ~TrieVisualHandler() = default;
 
     void setTreeStructure(Global::TreeStructure &newStructure);
 

@@ -10,6 +10,8 @@ bool avlValidator(const std::string &filename);
 
 bool heapValidator(const std::string &filename);
 
+bool sllValidator(const std::string &filename);
+
 } // namespace Validator
 
 

@@ -29,60 +29,140 @@ SinglyLinkedList::~SinglyLinkedList()
     this->clear();
 }
 
+void SinglyLinkedList::createSnapshot(int func, int line)
+{
+    snapshot_ptr->push_back(Global::TreeStructure());
+    Global::TreeStructure &snp = snapshot_ptr->back();
+    snp.rootId = this->head ? this->head->id : -1;
+    for (Node *cur = this->head; cur; cur = cur->pNext) {
+        snp.valueMap[cur->id] = std::to_string(cur->val);
+        snp.structureMap[cur->id] = std::make_tuple(cur->pNext ? cur->pNext->id : -1, -1, cur->ishighlighted);
+    }
+    snp.codeFunction = func;
+    snp.codeLine = line;
+}
+
 void SinglyLinkedList::insert(int x)
 {
     counter++;
     if (!head) {
+        createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 0);
         head = new Node();
         head->id = counter;
         head->val = x;
+        head->ishighlighted = true;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 1);
         tail = head;
+        head->ishighlighted = false;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 2);
+        // std::cerr << "Inser head null: " << x << ' ' << head << '\n';
         return;
     }
+    createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 3);
     tail->pNext = new Node();
     tail = tail->pNext;
     tail->id = counter;
     tail->val = x;
+    tail->ishighlighted = true;
+    createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 4);
+    tail->ishighlighted = false;
+    createSnapshot(Global::toInt(Global::SLL_FUNC::INSERT), 5);
 }
 
 bool SinglyLinkedList::find(int x)
 {
     for (Node *ptr = head; ptr; ptr = ptr->pNext) {
-        if (ptr->val == x) return true;
+        ptr->ishighlighted = true;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::FIND), 0);
+        createSnapshot(Global::toInt(Global::SLL_FUNC::FIND), 1);
+        if (ptr->val == x) {
+            createSnapshot(Global::toInt(Global::SLL_FUNC::FIND), 2);
+            return true;
+        }
+        ptr->ishighlighted = false;
     }
+    createSnapshot(Global::toInt(Global::SLL_FUNC::FIND), 3);
     return false;
 }
 
 bool SinglyLinkedList::remove(int x)
 {
-    if (!head) return false;
+    // std::cerr << "======================== Remove called: " << x << '\n';
+    if (!head) {
+        createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 0);
+        return false;
+    }
     if (head->val == x) {
+        head->ishighlighted = true;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 1);
+        head->ishighlighted = false;
         Node *tmp = head;
         head = head->pNext;
         delete tmp;
-        if (!head) tail = nullptr;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 2);
+        if (!head) {
+            createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 3);
+            tail = nullptr;
+        }
         return true;
     }
     for (Node *ptr = head; ptr->pNext; ptr = ptr->pNext) {
-        if (ptr->pNext->val = x) {
+        ptr->pNext->ishighlighted = true;
+        ptr->ishighlighted = true;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 5);
+        createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 6);
+        if (ptr->pNext->val == x) {
             Node *tmp = ptr->pNext;
             ptr->pNext = ptr->pNext->pNext;
             delete tmp;
-            if (tail == tmp) tail = ptr;
+            if (ptr->pNext) ptr->pNext->ishighlighted = true;
+            createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 7);
+            createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 8);
+            
+            // std::cerr << "Inside called\n";
+
+            if (tail == tmp) {
+                createSnapshot(Global::toInt(Global::SLL_FUNC::REMOVE), 9);
+                tail = ptr;
+            }
+            if (ptr->pNext) ptr->pNext->ishighlighted = false;
+            ptr->ishighlighted = false;
             return true;
         }
+        ptr->pNext->ishighlighted = false;
+        ptr->ishighlighted = false;
+    }
+    return false;
+}
+
+bool SinglyLinkedList::update(int x,int newVal)
+{
+    for (Node *cur = head; cur; cur = cur->pNext) {
+        cur->ishighlighted = true;
+        createSnapshot(Global::toInt(Global::SLL_FUNC::UPDATE), 0);
+        createSnapshot(Global::toInt(Global::SLL_FUNC::UPDATE), 1);
+        if (cur->val == x) {
+            cur->val = newVal;
+            createSnapshot(Global::toInt(Global::SLL_FUNC::UPDATE), 2);
+            cur->ishighlighted = false;
+            return true;
+        }
+        cur->ishighlighted = false;
     }
     return false;
 }
 
 void SinglyLinkedList::clear()
 {
-    while (!head) {
+    // std::cerr << "SLL clear called\n";
+    while (head) {
+        // std::cerr << "SLL clear inside";
         Node *tmp = head;
         head = head->pNext;
         delete tmp;
     }
     tail = nullptr;
+    // std::cerr << "SLL clear ended\n";
     counter = 0;
 }
 
@@ -147,11 +227,18 @@ void Heap::downheap(int id)
         createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),1);
         return;
     }
+
+    vec[minId].isHighlighted = true;
+    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),2);
+
     std::swap(vec[minId],vec[id]);
     createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),2);
-    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),3);
-    downheap(minId);
+
     vec[id].isHighlighted = false;
+    createSnapshot(toInt(Global::HEAP_FUNC::DOWNHEAP),3);
+
+    downheap(minId);
+    // vec[id].isHighlighted = false;
 }
 
 void Heap::upheap(int id)
@@ -160,8 +247,12 @@ void Heap::upheap(int id)
         vec[id].isHighlighted = true;
         createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),0);
         if (id != 0 && vec[findPa(id)].val < vec[id].val) {
+            vec[findPa(id)].isHighlighted = true;
+            createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),1);
+
             std::swap(vec[findPa(id)], vec[id]);
             createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),1);
+
             vec[id].isHighlighted = false;
             id = findPa(id);
             createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),2);
@@ -170,6 +261,11 @@ void Heap::upheap(int id)
     }
     vec[id].isHighlighted = false;
     createSnapshot(toInt(Global::HEAP_FUNC::UPHEAP),-1);
+}
+
+bool Heap::checkId(int id)
+{
+    return id < vec.size();
 }
 
 void Heap::insert(int x)
@@ -210,7 +306,7 @@ void Heap::pop()
 
 void Heap::updateById(int id,int newVal)
 {
-    if (id >= vec.size()) return;
+    // if (id >= vec.size()) return;
     int preVal = vec[id].val;
     vec[id].isHighlighted = true;
     createSnapshot(toInt(Global::HEAP_FUNC::UPDATE_BY_ID),0);
@@ -228,11 +324,21 @@ void Heap::updateById(int id,int newVal)
 
 void Heap::removeById(int id)
 {
+
     while (true) {
+        vec[id].isHighlighted = true;
         createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),0);
-        if (id == 0) break;
+        if (id == 0) {
+            vec[id].isHighlighted = false;
+            break;
+        }
+        vec[findPa(id)].isHighlighted = true;
+        createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),1);
+
         std::swap(vec[findPa(id)],vec[id]);
         createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),1);
+
+        vec[id].isHighlighted = false;
         id = findPa(id);
         createSnapshot(toInt(Global::HEAP_FUNC::REMOVE_BY_ID),2);
     }
@@ -386,7 +492,7 @@ void AVLTree::findMax(Node *&cur, int& retVal)
 
 void AVLTree::insertRecur(int x,Node *&cur)
 {
-    std::cerr << x << '\n';
+    // std::cerr << x << '\n';
     if (!cur) {
         cur = new Node();
         cur->id = counter;
@@ -395,7 +501,7 @@ void AVLTree::insertRecur(int x,Node *&cur)
         createSnapshot(toInt(Global::AVL_FUNC::INSERT), 0);
         return;
     }
-    std::cerr << "Current id: " << cur->id << '\n';
+    // std::cerr << "Current id: " << cur->id << '\n';
 
     cur->ishighlighted = true;
     createSnapshot(toInt(Global::AVL_FUNC::INSERT), 0);
@@ -541,6 +647,128 @@ void AVLTree::clear()
 {
     clearRecur(root);
     root = nullptr;
+    counter = 0;
+}
+
+//======================================================//
+
+// Trie implementation
+
+Trie::~Trie()
+{
+    this->clear();
+}
+
+Trie::Node::Node()
+{
+    for (int i = 0; i < MAX_SZ; i++) {
+        ch[i] = nullptr;
+    }
+}
+
+void Trie::createSnapshotRecur(Node *cur, Global::TreeStructure &snapshot)
+{
+    if (!cur) return;
+    snapshot.valueMap[cur->id] = cur->cnt;
+    std::vector<std::pair<int,char>> chVec;
+    for (int i = 0; i < MAX_SZ; i++) {
+        if (cur->ch[i]) {
+            chVec.emplace_back(cur->ch[i]->id,char('a' + i));
+            createSnapshotRecur(cur->ch[i],snapshot);
+        }
+    }
+    snapshot.trieMap[cur->id] = std::make_tuple(cur->ishighlighted,cur->isSpecial,chVec);
+}
+
+void Trie::createSnapshot(int func,int line)
+{
+    snapshot_ptr->push_back(Global::TreeStructure());
+    Global::TreeStructure &cur = snapshot_ptr->back();
+    cur.codeFunction = func;
+    cur.codeLine = line;
+    cur.rootId = root ? root->id : -1;
+    createSnapshotRecur(root,cur);
+}
+
+bool Trie::removeRecur(Node *cur,int id,const std::string &s)
+{
+    if (!cur) return false;
+    if (id == s.size()) {
+        cur->cnt--;
+        cur->strCnt--;
+        if (cur->strCnt == 0) cur->isSpecial = 0;
+        return true;
+    }
+    int c = s[id] - 'a';
+    if (!removeRecur(cur->ch[c],id+1,s)) return false;
+    if (cur->ch[c]->cnt == 0) {
+        delete cur->ch[c];
+        cur->ch[c] = nullptr;
+    }
+    cur->cnt--;
+    return true;
+}
+
+void Trie::clearRecur(Node *&cur)
+{
+    if (!cur) return;
+    for (int i = 0; i < MAX_SZ; i++) {
+        if (cur->ch[i]) clearRecur(cur->ch[i]);
+    }
+    delete cur;
+    cur = nullptr;
+}
+
+void Trie::insert(const std::string &s)
+{
+    if (!root) {
+        counter++;
+        root = new Node();
+        root->id = counter;
+    }
+    Node *cur = root;
+    for (int i = 0; i < s.size(); i++) {
+        int c = s[i] - 'a';
+        cur->cnt++;
+        if (!cur->ch[c]) {
+            counter++;
+            cur->ch[c] = new Node();
+            cur->ch[c]->id = counter;
+        }
+        cur = cur->ch[c];
+    }
+    cur->cnt++;
+    cur->strCnt++;
+    cur->isSpecial = 1;
+}
+
+bool Trie::find(const std::string &s)
+{
+    if (!root) return false;
+    Node *cur = root;
+    for (int i = 0; i < s.size(); i++) {
+        int c = s[i] - 'a';
+        if (!cur->ch[c]) return false;
+        cur = cur->ch[c];
+    }
+    return cur->strCnt;
+}
+
+bool Trie::remove(const std::string &s)
+{
+    return removeRecur(root,0,s); 
+}
+
+bool Trie::update(const std::string &s, const std::string &newS)
+{
+    if (remove(s)) {
+        insert(newS);
+    }
+}
+
+void Trie::clear()
+{
+    clearRecur(root);
     counter = 0;
 }
 

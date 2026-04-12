@@ -62,10 +62,13 @@ Node::Node(
     sf::Color bgColor,
     sf::Color textColor,
     sf::Color borderColor,
-    sf::Color highlightColor
+    sf::Color highlightColor,
+    sf::Color specialColor
 ) : text(Global::numberFont)
 {
     this->pos = pos;
+    this->bgColor = bgColor;
+    this->specialColor = specialColor;
 
     this->circle.setRadius(radius);
     this->circle.setOrigin(this->circle.getLocalBounds().position + this->circle.getLocalBounds().size * 0.5f);
@@ -127,6 +130,16 @@ void Node::setHighlighted(bool value)
     isHighlighted = value;
 }
 
+void Node::setSpecial(bool value)
+{
+    if (value) {
+        this->circle.setFillColor(specialColor);
+    }
+    else {
+        this->circle.setFillColor(bgColor);
+    }
+}
+
 //======================================================//
 
 // Line implementation
@@ -139,19 +152,36 @@ Line::Line(
     int textSize,
     int textOutlineThickness,
     sf::Color lineColor,
+    sf::Color highlightColor,
     sf::Color textColor,
-    sf::Color textOutlineColor
+    sf::Color textOutlineColor,
+    bool directed
 ) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Global::numberFont)
 {
     this->line.setFillColor(lineColor);
     this->line.setOrigin({0,this->line.getLocalBounds().position.y + lineThickness * 0.5f});
 
-    this->text.setString(text);
+    if (text == "") this->text.setString("A");
+    else this->text.setString(text);
     this->text.setCharacterSize(textSize);
     this->text.setOutlineThickness(textOutlineThickness);
     this->text.setFillColor(textColor);
     this->text.setOutlineColor(textOutlineColor);
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
+    if (text == "") this->text.setString("");
+
+    this->arrowHead.setRadius(arrowRad);
+    this->arrowHead.setPointCount(3);
+    this->arrowHead.setFillColor(lineColor);
+    // this->arrowHead.setOrigin(this->arrowHead.getLocalBounds().position + this->arrowHead.getLocalBounds().size * 0.5f);
+    this->arrowHead.setOrigin(
+        {this->arrowHead.getLocalBounds().position.x + this->arrowHead.getLocalBounds().size.x * 0.5f, 0}
+    );
+
+    this->normalColor = lineColor;
+    this->highlightColor = highlightColor;
+
+    this->directed = directed;
 
     this->setupLine();
 }
@@ -159,6 +189,7 @@ Line::Line(
 void Line::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
     target.draw(this->line,state);
+    if (this->directed) target.draw(this->arrowHead,state);
     target.draw(this->text,state);
 }
 
@@ -167,12 +198,33 @@ void Line::setupLine()
     double dx = this->endPos.x - this->startPos.x;
     double dy = this->endPos.y - this->startPos.y;
     float length = sqrt(dx * dx + dy * dy);
+
     this->line.setPosition(this->startPos);
     this->line.setSize({length,lineThickness});
-    this->line.setRotation(sf::radians(atan2(dy,dx)));
+    this->arrowHead.setPosition(this->endPos);
 
+    sf::Angle angle(sf::radians(atan2(dy,dx)));
+
+    this->line.setRotation(angle);
+    this->arrowHead.setRotation(angle + sf::radians(asin(1)));
+    
     this->text.setPosition(this->line.getGlobalBounds().position + this->line.getGlobalBounds().size * 0.5f);
+}
 
+void Line::highlight()
+{
+    this->line.setFillColor(highlightColor);
+    this->arrowHead.setFillColor(highlightColor);
+}
+void Line::unhighlight()
+{
+    this->line.setFillColor(normalColor);
+    this->arrowHead.setFillColor(normalColor);
+}
+
+void Line::setString(const std::string &s)
+{
+    this->text.setString(s);
 }
 
 void Line::setStartPos(sf::Vector2f newStartPos)
@@ -180,7 +232,6 @@ void Line::setStartPos(sf::Vector2f newStartPos)
     this->startPos = newStartPos;
     this->setupLine();
 }
-
 void Line::setEndPos(sf::Vector2f newEndPos)
 {
     this->endPos = newEndPos;
@@ -191,7 +242,6 @@ sf::Vector2f Line::getStartPos()
 {
     return this->startPos;
 }
-
 sf::Vector2f Line::getEndPos()
 {
     return this->endPos;

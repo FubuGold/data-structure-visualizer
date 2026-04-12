@@ -53,7 +53,7 @@ void Animation::end()
 
 // Tree handler implementation
 
-std::pair<int,int> getId(int x,int y) {return {std::min(x,y),std::max(x,y)}; }
+// std::pair<int,int> getId(int x,int y) {return {std::min(x,y),std::max(x,y)}; }
 
 TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY, int startY)
 {
@@ -71,6 +71,12 @@ TreeVisualHandler::TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int st
     // debugDots.emplace_back(pos + size);
     // debugDots.emplace_back(pos + sf::Vector2f(centerLine, startY));
 }
+
+TreeVisualHandler::~TreeVisualHandler()
+{
+    for (Animation *p : animationList) delete p;
+}
+
 
 void TreeVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
@@ -161,13 +167,21 @@ void TreeVisualHandler::recalLine()
 {
     lineList.clear();
     for (std::pair<const int,TreeNode> &node : nodeList) {
-        if (node.second.leftCh != -1)
+        if (node.second.leftCh != -1) {
             lineList.push_back(calLinePosition(node.second.getPos(),
-                            nodeList[node.second.leftCh].getPos()));
+                nodeList[node.second.leftCh].getPos()));
+            if (node.second.isHighlighted && nodeList[node.second.leftCh].isHighlighted) {
+                lineList.back().highlight();
+            }
+        }
         
-        if (node.second.rightCh != -1)
+        if (node.second.rightCh != -1) {
             lineList.push_back(calLinePosition(node.second.getPos(),
-                            nodeList[node.second.rightCh].getPos()));
+                nodeList[node.second.rightCh].getPos()));
+            if (node.second.isHighlighted && nodeList[node.second.rightCh].isHighlighted) {
+                lineList.back().highlight();
+            }
+        }
     }
 }
 
@@ -183,6 +197,7 @@ void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
         curNode.leftCh = std::get<0>(newNode.second);
         curNode.rightCh = std::get<1>(newNode.second);
         curNode.setHighlighted(std::get<2>(newNode.second));
+        curNode.isHighlighted = std::get<2>(newNode.second);
         if (curNode.leftCh != -1) this->nodeList[curNode.leftCh].paId = newNode.first;
         if (curNode.rightCh != -1) this->nodeList[curNode.rightCh].paId = newNode.first;
         
@@ -244,6 +259,288 @@ void TreeVisualHandler::clear()
     nodeList.clear();
     curTreeHeight = 0;
 }
+
+//======================================================//
+
+SLLVisualHandler::SLLVisualHandler(sf::Vector2f size, sf::Vector2f pos, int yLine, int startX, int stepX)
+{
+    this->pos = pos;
+    this->size = size;
+    this->background.setSize(size);
+    this->background.setPosition(pos);
+    this->background.setFillColor(sf::Color::White);
+
+    this->yLine = yLine;
+    this->startX = startX;
+    this->stepX = stepX;
+}
+
+SLLVisualHandler::~SLLVisualHandler()
+{
+    for (Animation *p : animationList) delete p;
+}
+
+void SLLVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    target.draw(this->background);
+    for (int i=0;i<lineList.size();i++) {
+        target.draw(lineList[i], state);
+    }
+
+    for (const std::pair<int,StructNode>& node : this->nodeList)
+    {
+        target.draw(node.second, state);
+    }
+}
+
+SLLVisualHandler::StructLine SLLVisualHandler::calLinePosition(sf::Vector2f from, sf::Vector2f to)
+{
+    // Calculate the vector from the center to the edge in the direction pointing to each other
+    sf::Vector2f v1 = this->nodeRadius * (to - from).normalized();
+    sf::Vector2f v2 = this->nodeRadius * (from - to).normalized();
+
+    return StructLine(from + v1, to + v2);
+}
+
+void SLLVisualHandler::recalLine()
+{
+    lineList.clear();
+    for (std::pair<const int,StructNode> &node : nodeList) {
+        if (node.second.nxt != -1) {
+            lineList.push_back(calLinePosition(node.second.getPos(),
+                nodeList[node.second.nxt].getPos()));
+            if (node.second.isHighlighted && nodeList[node.second.nxt].isHighlighted) {
+                lineList.back().highlight();
+            }
+        }
+    }
+}
+
+void SLLVisualHandler::recalPos()
+{
+    if (this->root == -1) return;
+
+    sf::Vector2f lastPos(-1,-1);
+
+    for (int curId = this->root; curId != -1; curId = nodeList[curId].nxt) {
+        assert(nodeList.find(curId) != nodeList.end());
+        StructNode &cur = nodeList[curId];
+        sf::Vector2f prevPos = cur.getPos(), newPos;
+        if (curId == this->root) {
+            newPos = sf::Vector2f(startX, yLine) + pos;
+        }
+        else {
+            newPos = lastPos + sf::Vector2f(stepX, 0);
+        }
+
+        Animation *tmp = new Animation();
+        tmp->play(&cur,prevPos,newPos);
+        animationList.push_back(tmp);
+
+        lastPos = newPos;
+    }
+}
+
+void SLLVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
+{
+    std::cerr << "Tree structure reset\n";
+    this->root = newStructure.rootId;
+
+    for (std::pair<const int,std::tuple<int,int,bool>> &newNode : newStructure.structureMap) {
+        StructNode &curNode = this->nodeList[newNode.first];
+        curNode.nxt = std::get<0>(newNode.second);
+        curNode.setHighlighted(std::get<2>(newNode.second));
+        curNode.isHighlighted = std::get<2>(newNode.second);
+        if (curNode.nxt != -1) this->nodeList[curNode.nxt].prevId = newNode.first;
+
+        curNode.setValue(newStructure.valueMap[newNode.first]);
+    }
+
+    for (auto it = nodeList.begin(); it != nodeList.end();) {
+        if (newStructure.structureMap.find(it->first) == newStructure.structureMap.end()) {
+            it = nodeList.erase(it);
+        }
+        else it++;
+    }
+
+    std::cerr << "Tree structure reset complete\n";
+    recalPos();
+    std::cerr << "Recal pos completed\n";
+    std::cerr << "===========================\n";
+}
+
+void SLLVisualHandler::updateAnimation()
+{
+    for (Animation *&ani : animationList) {
+        if (ani->isDone()) {
+            delete ani;
+            ani = nullptr;
+        }
+        else {
+            ani->update();
+        }
+    }
+    for (int i=0;i<animationList.size();i++) {
+        if (animationList[i] == nullptr) {
+            i = animationList.erase(animationList.begin() + i) - animationList.begin() - 1;
+        }
+    }
+    recalLine();
+}
+
+void SLLVisualHandler::endAnimation()
+{
+    for (Animation *&ani : animationList) {
+        ani->end();
+    }
+}
+
+bool SLLVisualHandler::isAnimationEnd()
+{
+    return animationList.empty();
+}
+
+void SLLVisualHandler::clear()
+{
+    lineList.clear();
+    nodeList.clear();
+    curTreeHeight = 0;
+}
+
+//======================================================//
+
+TrieVisualHandler::TrieVisualHandler(
+    sf::Vector2f size,
+    sf::Vector2f pos,
+    int stepY,
+    int startY
+)
+{
+    this->pos = pos;
+    this->size = size;
+    this->background.setSize(size);
+    this->background.setPosition(pos);
+    this->background.setFillColor(sf::Color::White);
+
+    this->centerLine = size.x / 2;
+    this->stepY = stepY;
+    this->startY = startY;
+}
+
+TrieVisualHandler::~TrieVisualHandler()
+{
+    for (Animation *p : animationList) delete p;
+}
+
+
+void TrieVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    target.draw(this->background);
+    for (int i=0;i<lineList.size();i++) {
+        target.draw(lineList[i], state);
+    }
+
+    for (const std::pair<int,TrieNode>& node : this->nodeList)
+    {
+        target.draw(node.second, state);
+    }
+}
+
+TrieVisualHandler::TrieEdge TrieVisualHandler::calLinePosition(sf::Vector2f from, sf::Vector2f to)
+{
+    // Calculate the vector from the center to the edge in the direction pointing to each other
+    sf::Vector2f v1 = this->nodeRadius * (to - from).normalized();
+    sf::Vector2f v2 = this->nodeRadius * (from - to).normalized();
+
+    return TrieEdge(from + v1, to + v2);
+}
+
+void TrieVisualHandler::recalLine()
+{
+    lineList.clear();
+    for (std::pair<const int,TrieNode> &node : nodeList) {
+        for (int i=0;i<26;i++) {
+            int chId = node.second.ch[i];
+            if (chId == -1) continue;
+
+            lineList.push_back(calLinePosition(node.second.getPos(),
+                nodeList[chId].getPos()));
+            if (node.second.isHighlighted && nodeList[chId].isHighlighted) {
+                lineList.back().highlight();
+            }
+
+            std::string tmp;
+            tmp.push_back(char('a' + i));
+            lineList.back().setString(tmp);
+        }
+    }
+}
+
+void TrieVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
+{
+    std::cerr << "Trie structure reset\n";
+
+    this->root = newStructure.rootId;
+
+    for (std::pair<const int,Global::TrieChild_t> &newNode : newStructure.trieMap) {
+        TrieNode &curNode = this->nodeList[newNode.first];
+        curNode.isHighlighted = std::get<0>(newNode.second);
+        curNode.setSpecial(std::get<1>(newNode.second));
+        std::vector<std::pair<int,char>> chVec = std::get<2>(newNode.second);
+        for (std::pair<int,char> ch : chVec) {
+            curNode.ch[ch.second - 'a'] = ch.first;
+            this->nodeList[ch.first].paId = newNode.first;
+        }
+    }
+
+    // Clean up
+    for (auto it = nodeList.begin(); it != nodeList.end();) {
+        if (newStructure.structureMap.find(it->first) == newStructure.structureMap.end()) {
+            it = nodeList.erase(it);
+        }
+        else it++;
+    }
+
+}
+
+void TrieVisualHandler::updateAnimation()
+{
+    for (Animation *&ani : animationList) {
+        if (ani->isDone()) {
+            delete ani;
+            ani = nullptr;
+        }
+        else {
+            ani->update();
+        }
+    }
+    for (int i=0;i<animationList.size();i++) {
+        if (animationList[i] == nullptr) {
+            i = animationList.erase(animationList.begin() + i) - animationList.begin() - 1;
+        }
+    }
+    recalLine();
+}
+
+void TrieVisualHandler::endAnimation()
+{
+    for (Animation *&ani : animationList) {
+        ani->end();
+    }
+}
+
+bool TrieVisualHandler::isAnimationEnd()
+{
+    return animationList.empty();
+}
+
+void TrieVisualHandler::clear()
+{
+    lineList.clear();
+    nodeList.clear();
+    curTreeHeight = 0;
+}
+
 
 //======================================================//
 
@@ -349,7 +646,7 @@ void CodeVisualHandler::unhighlightCur()
 
 void CodeVisualHandler::setFunc(int func)
 {
-    // std::cerr << func << ' ' << codes.size() << '\n';
+    std::cerr << "Code visual handler: " << func << ' ' << codes.size() << '\n';
     curFunc = func;
     if (func == -1) return; 
     // assert(func > -1);

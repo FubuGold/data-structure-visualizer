@@ -42,15 +42,18 @@ private:
     {
         Node *pNext = nullptr;
         int id,val;
-        bool ishighlighted;
+        bool ishighlighted = false;
     } *head = nullptr, *tail = nullptr;
 
 public:
     ~SinglyLinkedList();
 
+    void createSnapshot(int func,int line) override;
+
     void insert(int x) override;
     bool find(int x) override;
     bool remove(int x) override;
+    bool update(int x,int newVal) override;
     void clear() override;
 
 };
@@ -74,16 +77,17 @@ private:
     void downheap(int id);
     void upheap(int id);
 
-    virtual void createSnapshot(int func,int line) override;
-
 public:
     ~Heap();
 
+    void createSnapshot(int func,int line) override;
+
+    bool checkId(int id);
     void insert(int x) override;
     int getMax();
     void pop();
-    void updateById(int id,int newVal);
     void removeById(int id);
+    void updateById(int id,int newVal);
     void clear() override;
 
 };
@@ -126,6 +130,45 @@ public:
     bool update(int x,int newVal) override;
     void clear() override;
 
+};
+
+/**
+ * @brief Trie structure
+ * 
+ * Only accept 'a' - 'z'
+ * 
+ */
+class Trie : public BaseStructure
+{
+protected:
+
+    static constexpr int MAX_SZ = 26;
+
+    struct Node
+    {
+        Node *ch[MAX_SZ];
+        Node();
+        int id;
+        int cnt = 0;
+        int strCnt = 0;
+        bool isSpecial = 0;
+        bool ishighlighted = 0;
+    } *root = nullptr;
+
+    bool removeRecur(Node *cur,int id,const std::string &s);
+    void clearRecur(Node *&cur);
+    void createSnapshotRecur(Node *cur, Global::TreeStructure &snapshot);
+
+public:
+    ~Trie();
+
+    void createSnapshot(int func,int line) override;
+
+    void insert(const std::string &s);
+    bool find(const std::string &s);
+    bool remove(const std::string &s);
+    bool update(const std::string &s,const std::string &newS);
+    void clear() override;
 };
 
 //======================================================//

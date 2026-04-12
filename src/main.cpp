@@ -14,8 +14,9 @@ void setupScene(sf::RenderTarget *target)
     using Global::toInt;
     using Global::SceneState;
     scenes[toInt(SceneState::MENU)] = std::make_shared<GUI::MenuScene>();
-    scenes[toInt(SceneState::AVL)] = std::make_shared<GUI::AVLScene>();
+    scenes[toInt(SceneState::SLL)] = std::make_shared<GUI::SLLScene>();
     scenes[toInt(SceneState::HEAP)] = std::make_shared<GUI::HeapScene>();
+    scenes[toInt(SceneState::AVL)] = std::make_shared<GUI::AVLScene>();
 
     for (int i = 0; i < Global::numScene; i++) {
         if (scenes[i]) {
@@ -27,9 +28,9 @@ void setupScene(sf::RenderTarget *target)
 
 int main()
 {
-
     avlTest();
     heapTest();
+    sllTest();
     std::cerr << "======================================================" << '\n';
     sf::RenderWindow window(sf::VideoMode({1280, 800}), "Data structure visualizer", sf::State::Windowed);
     
