@@ -409,6 +409,8 @@ void SLLVisualHandler::clear()
 
 //======================================================//
 
+// Trie visual handler implementation
+
 TrieVisualHandler::TrieVisualHandler(
     sf::Vector2f size,
     sf::Vector2f pos,
@@ -427,11 +429,15 @@ TrieVisualHandler::TrieVisualHandler(
     this->startY = startY;
 }
 
+TrieVisualHandler::TrieNode::TrieNode() : Node({0,0},"",nodeRadius,15,0,3,2)
+{
+    for (int i = 0; i < 26; i++) ch[i] = -1;
+}
+
 TrieVisualHandler::~TrieVisualHandler()
 {
     for (Animation *p : animationList) delete p;
 }
-
 
 void TrieVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
@@ -444,6 +450,66 @@ void TrieVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) c
     {
         target.draw(node.second, state);
     }
+}
+
+void TrieVisualHandler::findStartX()
+{
+    int numLeaves = 0;
+    for (const std::pair<int, TrieNode> &node : nodeList) {
+        bool flag = 1;
+        for (int i = 0; i < 26; i++) {
+            if (node.second.ch[i] != -1) {
+                flag = 0;
+                break;
+            }
+        }
+        if (flag) numLeaves++;
+    }
+    if (numLeaves == 0) {
+        startX = centerLine;
+        return;
+    }
+    float treeWidth = nodeRadius * 2 * numLeaves + padding * (numLeaves - 1);
+    startX = centerLine - treeWidth / 2;
+    return;
+}
+
+float TrieVisualHandler::recalPos(int id, int height)
+{
+    if (id == -1) return 0;
+    // static int leafCnt = 0;
+    std::cerr << "Recalculating pos: " << leafCnt << ' ' << id << ' ' << height << '\n';
+    bool isLeaf = 1;
+    TrieNode &curNode = nodeList[id];
+    sf::Vector2f oldPos = curNode.getPos(), newPos;
+    float maxX = INT_MIN, minX = INT_MAX;
+    for (int i = 0; i < 26; i++) {
+        // std::cerr << curNode.ch[i] << '\n';
+        if (curNode.ch[i] != -1) {
+            isLeaf = 0;
+            float chX = recalPos(curNode.ch[i], height+1);
+            // int chX = nodeList[curNode.ch[i]].getPos().x;
+            maxX = std::max(maxX, chX + nodeRadius);
+            minX = std::min(minX, chX - nodeRadius);
+        }
+    }
+    if (isLeaf) {
+        newPos = sf::Vector2f{startX + leafCnt * (nodeRadius * 2 + padding) + nodeRadius, startY + stepY * height};
+        leafCnt++;
+    }
+    else {
+        // std::cerr << maxX << ' ' << minX << ' ' << id << '\n';
+        assert(maxX != INT_MIN && minX != INT_MAX);
+        newPos = sf::Vector2f{(maxX + minX) / 2, startY + stepY * height};
+    }
+
+    // std::cerr << "Position of " << id << ": " << oldPos.x << ' ' << oldPos.y << ' ' << newPos.x << ' ' << newPos.y << '\n';
+
+    Animation *tmp = new Animation();
+    tmp->play(&curNode,oldPos,this->pos + newPos);
+    animationList.push_back(tmp);
+
+    return newPos.x;
 }
 
 TrieVisualHandler::TrieEdge TrieVisualHandler::calLinePosition(sf::Vector2f from, sf::Vector2f to)
@@ -478,29 +544,41 @@ void TrieVisualHandler::recalLine()
 
 void TrieVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
 {
-    std::cerr << "Trie structure reset\n";
+    std::cerr << "Trie - Visual: Structure reset\n";
+    std::cerr << newStructure << '\n';
 
     this->root = newStructure.rootId;
 
     for (std::pair<const int,Global::TrieChild_t> &newNode : newStructure.trieMap) {
         TrieNode &curNode = this->nodeList[newNode.first];
         curNode.isHighlighted = std::get<0>(newNode.second);
+        curNode.setHighlighted(curNode.isHighlighted);
         curNode.setSpecial(std::get<1>(newNode.second));
         std::vector<std::pair<int,char>> chVec = std::get<2>(newNode.second);
+        // std::cerr << newNode.first << '\n';
+        for (int i = 0; i < 26; i++) curNode.ch[i] = -1;
         for (std::pair<int,char> ch : chVec) {
-            curNode.ch[ch.second - 'a'] = ch.first;
+            // std::cerr << ch.first << ' ' << ch.second << ' ' << (int)ch.second - 'a' << '\n';
+            curNode.ch[(int)ch.second - 'a'] = ch.first;
             this->nodeList[ch.first].paId = newNode.first;
         }
+        curNode.setValue(newStructure.valueMap[newNode.first]);
     }
 
     // Clean up
     for (auto it = nodeList.begin(); it != nodeList.end();) {
-        if (newStructure.structureMap.find(it->first) == newStructure.structureMap.end()) {
+        if (newStructure.trieMap.find(it->first) == newStructure.trieMap.end()) {
+            std::cerr << "Clean up: " << it->first << '\n';
             it = nodeList.erase(it);
         }
         else it++;
     }
 
+    std::cerr << "Trie - Visual: Recalculating node position\n";
+    leafCnt = 0;
+    findStartX();
+    recalPos(root,0);
+    std::cerr << "Trie - Visual: Finish setting tree structure\n";
 }
 
 void TrieVisualHandler::updateAnimation()

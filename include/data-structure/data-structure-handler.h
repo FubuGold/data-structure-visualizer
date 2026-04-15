@@ -210,6 +210,73 @@ public:
 
 };
 
+//======================================================//
+
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class TrieHandler
+{
+protected:
+
+    static constexpr int VALUE_MAX = 99, VALUE_MIN = 0;
+
+    std::vector<Global::TreeStructure> snapshot;
+    DataStructure::Trie tree;
+    std::shared_ptr<GUI::TrieVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = 0.3f; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    TrieHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::TrieVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void insert(const std::string &x);
+    void find(const std::string &x);
+    void remove(const std::string &x);
+    void update(const std::string &x,const std::string &newVal);
+    void random();
+    void clear();
+    void file();
+
+};
+
 }
 
 #endif // DATA_STRUCTURE_HANDLER

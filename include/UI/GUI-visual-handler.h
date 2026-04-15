@@ -97,7 +97,7 @@ public:
      * @param startY is relative to the top left corner of the visual
      */
     TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
-    ~TreeVisualHandler() = default;
+    ~TreeVisualHandler();
 
     void setTreeStructure(Global::TreeStructure &newStructure);
 
@@ -170,7 +170,7 @@ public:
      * @param stepX 
      */
     SLLVisualHandler(sf::Vector2f size, sf::Vector2f pos, int yLine = 80, int startX = 51,int stepX = 51);
-    ~SLLVisualHandler() = default;
+    ~SLLVisualHandler();
 
     void setTreeStructure(Global::TreeStructure &newStructure);
 
@@ -190,23 +190,23 @@ class TrieVisualHandler : public sf::Drawable, public sf::Transformable
 {
 protected:
     static constexpr float nodeRadius = 15;
-    static constexpr float padding = 7;
+    static constexpr float padding = 30;
 
     class TrieNode : public Node
     {
     public:
         using Node::Node;
         using Node::getPos;
-        TrieNode() : Node({0,0},"",nodeRadius,15,0,3,2) {};
+        TrieNode();
         int paId = -1;
         int ch[26];
-        int isHighlighted = 0;
+        bool isHighlighted = 0;
     };
     class TrieEdge : public Line
     {
     public:
         using Line::Line;
-        TrieEdge() : Line({0,0},{0,0}) {};
+        TrieEdge() : Line({0,0},{0,0},"",2,15) {};
         int fromId = -1, toId = -1;
     };
 
@@ -224,7 +224,11 @@ protected:
     
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
-    void recalPos(int id);
+    int numLeaves;
+    int startX;
+    void findStartX();
+    int leafCnt;
+    float recalPos(int id,int height);
 
     std::vector<TrieEdge> lineList;
     std::vector<Animation*> animationList;
@@ -243,7 +247,7 @@ public:
      * @param stepX 
      */
     TrieVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
-    ~TrieVisualHandler() = default;
+    ~TrieVisualHandler();
 
     void setTreeStructure(Global::TreeStructure &newStructure);
 

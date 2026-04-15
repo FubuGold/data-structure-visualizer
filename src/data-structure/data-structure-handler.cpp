@@ -679,4 +679,239 @@ void SLLHandler::file()
     // endAnimation();
 }
 
+//======================================================//
+
+// Trie handler implementation
+
+TrieHandler::TrieHandler()
+{
+    tree.linkSnapshot(&snapshot);
+}
+
+void TrieHandler::preprocessing()
+{
+    TrieHandler::endAnimation();
+    snapshot.clear();
+    animationLock = 1;
+    // std::cerr << "Done preprocessing\n";
+}
+
+void TrieHandler::postprocessing()
+{
+    std::cerr << "Trie - Handler: Post processing began\n";
+    curSnapshot = 0;
+    delaying = false;
+    lockElement();
+    // std::cerr << "Post processing\n";
+
+    std::cerr << "Trie - Handler - Post processing: Locked element\n";
+
+    if (snapshot.size()) {
+        setSnapshot(0);
+    }
+
+    animationSlider->setNewRange(0, std::max(0,(int)snapshot.size()-1), std::max(0,(int)snapshot.size()-1));
+    animationSlider->setValue(0);
+
+    std::cerr << "Trie - Handler: Post processing completed\n";
+}
+
+void TrieHandler::lockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        // std::cerr << lockableElement[i] << '\n';
+        lockableElement[i]->lock();
+    }
+}
+
+void TrieHandler::unlockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        lockableElement[i]->unlock();
+    }
+}
+
+void TrieHandler::setSnapshot(int id)
+{
+    std::cerr << "Setting snapshot: " << id << ' ' << snapshot[id].codeFunction << ' ' << snapshot[id].codeLine << '\n';
+    visualizer->setTreeStructure(snapshot[id]);
+    animationSlider->setValue(id);
+    codeVisualizer->setFunc(snapshot[id].codeFunction);
+    codeVisualizer->setLine(snapshot[id].codeLine);
+}
+
+void TrieHandler::setVisualizer(std::shared_ptr<GUI::TrieVisualHandler> visualizer_p)
+{
+    this->visualizer = visualizer_p;
+}
+void TrieHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
+{
+    this->animationSlider = animationSlider_p;
+}
+void TrieHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
+{
+    this->codeVisualizer = codeVisualizer_p;
+}
+
+void TrieHandler::addLockableElement(std::shared_ptr<GUI::IInteractableElement> element)
+{
+    this->lockableElement.push_back(element);
+}
+
+void TrieHandler::loop()
+{
+    visualizer->updateAnimation();
+    if (!animationLock) return;
+    if (visualizer->isAnimationEnd()) {
+        if (delayClock.getElapsedTime().asSeconds() * Global::animationSpeed <= DELAY_TIME) return;
+        if (curSnapshot >= (int)snapshot.size() - 1) {
+            if (animationLock) {
+                animationLock = 0;
+                unlockElement();
+            }
+            return;
+        }
+        curSnapshot++;
+        setSnapshot(curSnapshot);
+        delayClock.restart();
+    }
+    else delayClock.restart();
+}
+
+void TrieHandler::endAnimation()
+{
+    // std::cerr << "End animation called\n";
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot.back());
+        setSnapshot(snapshot.size()-1);
+        visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = std::max(0,(int)snapshot.size() - 1);
+    animationLock = 0;
+    // std::cerr << "After if " << curSnapshot << '\n';
+    // std::cerr << "animationSlider" << '\n';
+    animationSlider->setValue(curSnapshot);
+    
+    unlockElement();
+}
+
+void TrieHandler::fullUndo()
+{
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot[0]);
+        setSnapshot(0);
+        visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = 0;
+    animationLock = 0;
+    // animationSlider->setValue(curSnapshot); 
+}
+
+void TrieHandler::undo()
+{
+    if (curSnapshot > 0) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        visualizer->endAnimation();
+        curSnapshot--;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void TrieHandler::redo()
+{
+    if (curSnapshot < (int)snapshot.size()-1) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        visualizer->endAnimation();
+        curSnapshot++;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void TrieHandler::insert(const std::string &x)
+{
+    preprocessing();
+    tree.insert(x);
+    postprocessing();
+}
+
+void TrieHandler::find(const std::string &x)
+{
+    preprocessing();
+    tree.find(x);
+    postprocessing();
+}
+
+void TrieHandler::remove(const std::string &x)
+{
+    preprocessing();
+    tree.remove(x);
+    postprocessing();
+}
+
+void TrieHandler::update(const std::string &x,const std::string &newVal)
+{
+    preprocessing();
+    tree.update(x,newVal);
+    std::cerr << "Trie - Handler: Tree update ended\n";
+    postprocessing();
+}
+
+std::string randomStringGen(int maxLen)
+{
+    int n = rng(1, maxLen);
+    std::string res;
+    for (int i = 0; i < n; i++) {
+        char c(rng('a','z'));
+        res.push_back(c);
+    }
+    return res;
+}
+
+void TrieHandler::random()
+{
+    clear();
+    int n = rng(5,10);
+    preprocessing();
+    for (int i = 0; i < n; i++) {
+        tree.insert(randomStringGen(7));
+    }
+    postprocessing();
+    endAnimation();
+}
+
+void TrieHandler::clear()
+{
+    tree.clear();
+    snapshot.clear();
+    visualizer->clear();
+    curSnapshot = 0;
+}
+
+void TrieHandler::file()
+{
+    std::string filename = Global::openFile();
+    if (filename == "") return;
+    if (!Validator::trieValidator(filename)) return;
+    
+    clear();
+
+    preprocessing();
+
+    std::ifstream inp(filename);
+    int n; inp >> n;
+    for (int i = 0; i < n; i++) {
+        std::string x; inp >> x;
+        tree.insert(x);
+    }
+
+    postprocessing();
+    // endAnimation();
+}
+
 }

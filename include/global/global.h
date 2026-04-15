@@ -72,6 +72,13 @@ enum class AVL_FUNC {
     BALANCE
 };
 
+enum class TRIE_FUNC {
+    INSERT,
+    FIND,
+    REMOVE,
+    UPDATE
+};
+
 using TrieChild_t = std::tuple<bool, bool, std::vector<std::pair<int,char>>>;
 
 struct TreeStructure
@@ -87,6 +94,9 @@ struct TreeStructure
         out << treeStruct.rootId << ' ' << treeStruct.valueMap.size() << ' ' << treeStruct.structureMap.size() << '\n';
         out << "Internal structure:\n";
         for (auto v : treeStruct.structureMap) {
+            out << v.first << ' ' << std::get<0>(v.second) << ' ' << std::get<1>(v.second) << '\n';
+        }
+        for (auto v : treeStruct.trieMap) {
             out << v.first << ' ' << std::get<0>(v.second) << ' ' << std::get<1>(v.second) << '\n';
         }
         return out;

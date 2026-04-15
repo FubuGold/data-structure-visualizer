@@ -264,7 +264,7 @@ void MenuScene::setup()
         sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
     );
     trieButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
-
+        Global::curAppState = Global::SceneState::TRIE;
     });
     addElement(trieButton);
 
@@ -933,6 +933,124 @@ void AVLScene::loopUpdate()
     avlHandler.loop();
 }
 
+//======================================================//
 
+// AVL scene implementation
+
+bool charFilter(char32_t c)
+{
+    return c >= 'a' && c <= 'z';
+}
+
+void TrieScene::setup()
+{
+    VisualScene::setup();
+
+    std::cerr << "AVL scene setup start\n";
+
+    this->treeVisual = std::make_shared<GUI::TrieVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 70, 30);
+    trieHandler.setVisualizer(treeVisual);
+    addElement(treeVisual);
+
+    trieHandler.setAnimationSlider(this->animationSlider);
+    this->animationSlider->lock();
+
+    trieHandler.addLockableElement(this->insertBtn);
+    trieHandler.addLockableElement(this->removeBtn);
+    trieHandler.addLockableElement(this->findBtn);
+    trieHandler.addLockableElement(this->updateBtn);
+    trieHandler.addLockableElement(this->clearBtn);
+    trieHandler.addLockableElement(this->randomBtn);
+    trieHandler.addLockableElement(this->inputField);
+    trieHandler.addLockableElement(this->updField);
+    trieHandler.addLockableElement(this->fileBtn);
+    trieHandler.addLockableElement(this->fullUndoBtn);
+    trieHandler.addLockableElement(this->undoBtn);
+    trieHandler.addLockableElement(this->redoBtn);
+    // trieHandler.addLockableElement(this->fullRedoBtn);
+
+    this->inputField->setFilter(charFilter);
+    this->insertBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        this->trieHandler.insert(value);
+    });
+
+    this->removeBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        this->trieHandler.remove(value);
+    });
+
+    this->findBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        if (value == "") return;
+        this->trieHandler.find(value);
+    });
+
+    this->updField->setFilter(charFilter);
+    this->updateBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        std::string value = this->inputField->getValue();
+        std::string newValue = this->updField->getValue();
+        if (value == "" || newValue == "") return;
+        this->trieHandler.update(value, newValue);
+    });
+
+    this->randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.random();
+        this->trieHandler.endAnimation();
+    });
+
+    this->clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.clear();
+    });
+
+    this->fullUndoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.fullUndo();
+    });
+
+    this->fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.endAnimation();
+    });
+
+    this->undoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.undo();
+    });
+
+    this->redoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.redo();
+    });
+
+    this->fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->trieHandler.file();
+    });
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/trie/insert.txt",
+        "./asset/psuedo-code/trie/find.txt",
+        "./asset/psuedo-code/trie/remove.txt",
+        "./asset/psuedo-code/trie/update.txt"
+    };
+
+    std::vector<std::string> funcName = {
+        "Insert", "Find", "Remove", "Update"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(870,510), sf::Vector2f(410,20),
+        14,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+
+    trieHandler.setCodeVisualizer(codeVisual);
+
+    Scene::setup();
+}
+
+void TrieScene::loopUpdate()
+{
+    trieHandler.loop();
+}
 
 }

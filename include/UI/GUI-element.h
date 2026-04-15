@@ -142,7 +142,7 @@ public:
         int textOutlineThickness = 2,
         sf::Color lineColor = sf::Color::Black,
         sf::Color highlightColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT],
-        sf::Color textColor = sf::Color::Black,
+        sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
         sf::Color textOutlineColour = sf::Color::White,
         bool directed = true
     );

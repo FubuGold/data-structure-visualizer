@@ -669,7 +669,7 @@ Trie::Node::Node()
 void Trie::createSnapshotRecur(Node *cur, Global::TreeStructure &snapshot)
 {
     if (!cur) return;
-    snapshot.valueMap[cur->id] = cur->cnt;
+    snapshot.valueMap[cur->id] = std::to_string(cur->cnt);
     std::vector<std::pair<int,char>> chVec;
     for (int i = 0; i < MAX_SZ; i++) {
         if (cur->ch[i]) {
@@ -692,20 +692,37 @@ void Trie::createSnapshot(int func,int line)
 
 bool Trie::removeRecur(Node *cur,int id,const std::string &s)
 {
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),0);
     if (!cur) return false;
+    cur->ishighlighted = true;
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),1);
     if (id == s.size()) {
         cur->cnt--;
         cur->strCnt--;
         if (cur->strCnt == 0) cur->isSpecial = 0;
+        createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),2);
+        cur->ishighlighted = false;
+        createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),3);
         return true;
     }
     int c = s[id] - 'a';
-    if (!removeRecur(cur->ch[c],id+1,s)) return false;
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),4);
+    if (!removeRecur(cur->ch[c],id+1,s)) {
+        cur->ishighlighted = false;
+        createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),4);
+        return false;
+    }
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),5);
     if (cur->ch[c]->cnt == 0) {
         delete cur->ch[c];
         cur->ch[c] = nullptr;
+        createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),6);
+        createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),7);
     }
     cur->cnt--;
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),8);
+    cur->ishighlighted = false;
+    createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),9);
     return true;
 }
 
@@ -721,49 +738,97 @@ void Trie::clearRecur(Node *&cur)
 
 void Trie::insert(const std::string &s)
 {
+    std::cerr << "Trie - DS: Inserting: " << s << '\n';
+    createSnapshot(toInt(Global::TRIE_FUNC::INSERT),0);
     if (!root) {
         counter++;
         root = new Node();
         root->id = counter;
     }
     Node *cur = root;
+    // cur->ishighlighted = true;
+    createSnapshot(toInt(Global::TRIE_FUNC::INSERT),1);
     for (int i = 0; i < s.size(); i++) {
+        cur->ishighlighted = true;
+        createSnapshot(toInt(Global::TRIE_FUNC::INSERT),2);
         int c = s[i] - 'a';
         cur->cnt++;
+        createSnapshot(toInt(Global::TRIE_FUNC::INSERT),3);
+        createSnapshot(toInt(Global::TRIE_FUNC::INSERT),4);
         if (!cur->ch[c]) {
             counter++;
             cur->ch[c] = new Node();
             cur->ch[c]->id = counter;
+            createSnapshot(toInt(Global::TRIE_FUNC::INSERT),5);
         }
+        cur->ishighlighted = false;
         cur = cur->ch[c];
+        // cur->ishighlighted = true;
+        createSnapshot(toInt(Global::TRIE_FUNC::INSERT),6);
     }
     cur->cnt++;
     cur->strCnt++;
     cur->isSpecial = 1;
+    createSnapshot(toInt(Global::TRIE_FUNC::INSERT),7);
+    cur->ishighlighted = false;
+    createSnapshot(toInt(Global::TRIE_FUNC::INSERT),7);
+    std::cerr << "Trie - DS: Insert ended\n";
 }
 
 bool Trie::find(const std::string &s)
 {
-    if (!root) return false;
-    Node *cur = root;
-    for (int i = 0; i < s.size(); i++) {
-        int c = s[i] - 'a';
-        if (!cur->ch[c]) return false;
-        cur = cur->ch[c];
+    createSnapshot(toInt(Global::TRIE_FUNC::FIND),0);
+    if (!root) {
+        return false;
     }
+    Node *cur = root;
+    cur->ishighlighted = true;
+    createSnapshot(toInt(Global::TRIE_FUNC::FIND),1);
+    for (int i = 0; i < s.size(); i++) {
+        createSnapshot(toInt(Global::TRIE_FUNC::FIND),2);
+        int c = s[i] - 'a';
+        createSnapshot(toInt(Global::TRIE_FUNC::FIND),3);
+        if (!cur->ch[c]) {
+            cur->ishighlighted = false;
+            return false;
+        }
+        cur->ishighlighted = false;
+        cur = cur->ch[c];
+        cur->ishighlighted = true;
+        createSnapshot(toInt(Global::TRIE_FUNC::FIND),4);
+    }
+    createSnapshot(toInt(Global::TRIE_FUNC::FIND),5);
+    cur->ishighlighted = false;
     return cur->strCnt;
 }
 
 bool Trie::remove(const std::string &s)
 {
-    return removeRecur(root,0,s); 
+    std::cerr << "Trie - DS: Remove called\n";
+    if (removeRecur(root,0,s)) {
+        if (root->cnt == 0) {
+            delete root;
+            root = nullptr;
+            createSnapshot(toInt(Global::TRIE_FUNC::REMOVE),-1);
+        }
+        std::cerr << "Trie - DS: Remove ended true\n";
+        return true;
+    } 
+    std::cerr << "Trie - DS: Remove ended false\n";
+    return false;
 }
 
 bool Trie::update(const std::string &s, const std::string &newS)
 {
+    createSnapshot(toInt(Global::TRIE_FUNC::UPDATE),0);
+    // bool flag = remove(s);
+    // std::cerr << flag << '\n';
     if (remove(s)) {
+        createSnapshot(toInt(Global::TRIE_FUNC::UPDATE),1);
         insert(newS);
+        return true;
     }
+    return false;
 }
 
 void Trie::clear()

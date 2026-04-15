@@ -161,14 +161,17 @@ Line::Line(
     this->line.setFillColor(lineColor);
     this->line.setOrigin({0,this->line.getLocalBounds().position.y + lineThickness * 0.5f});
 
-    if (text == "") this->text.setString("A");
-    else this->text.setString(text);
+    // if (text == "") this->text.setString("a");
+    this->text.setString(text);
     this->text.setCharacterSize(textSize);
     this->text.setOutlineThickness(textOutlineThickness);
     this->text.setFillColor(textColor);
     this->text.setOutlineColor(textOutlineColor);
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
-    if (text == "") this->text.setString("");
+    // this->text.setOrigin(
+    //     {0,this->text.getLocalBounds().position.x + this->text.getLocalBounds().size.x * 0.5f}
+    // );
+    // if (text == "") this->text.setString("");
 
     this->arrowHead.setRadius(arrowRad);
     this->arrowHead.setPointCount(3);
@@ -208,7 +211,10 @@ void Line::setupLine()
     this->line.setRotation(angle);
     this->arrowHead.setRotation(angle + sf::radians(asin(1)));
     
-    this->text.setPosition(this->line.getGlobalBounds().position + this->line.getGlobalBounds().size * 0.5f);
+    // debugDots.emplace_back(this->line.getGlobalBounds().position);
+    // debugDots.emplace_back(this->line.getGlobalBounds().position + this->line.getGlobalBounds().size);
+
+    this->text.setPosition((this->startPos + this->endPos) * 0.5f);
 }
 
 void Line::highlight()
@@ -225,6 +231,8 @@ void Line::unhighlight()
 void Line::setString(const std::string &s)
 {
     this->text.setString(s);
+    this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
+    this->text.setPosition((this->startPos + this->endPos) * 0.5f);
 }
 
 void Line::setStartPos(sf::Vector2f newStartPos)

@@ -145,6 +145,19 @@ public:
     void loopUpdate() override;
 };
 
+class TrieScene : public VisualScene
+{
+protected:
+
+    std::shared_ptr<GUI::TrieVisualHandler> treeVisual;
+    Handler::TrieHandler trieHandler;
+
+public:
+
+    void setup() override;
+    void loopUpdate() override;
+};
+
 }
 
 #endif // UI_GUI_SCENE_H
