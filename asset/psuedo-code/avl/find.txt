@@ -1,0 +1,4 @@
+if this == null: return null
+else if this == v: return this
+else if this < v: this = this->right
+else this = this->left

@@ -1,0 +1,11 @@
+if head == nullptr: return
+if head->val == x:
+    delete head and set it to the next
+    if head == nullptr: tail = nullptr
+else:
+    for (ptr = head; ptr->pNext; ptr = ptr->pNext):
+        if ptr->pNext->val == x:
+            delete ptr->pNext 
+            set it to ptr->pNext->pNext
+            if tail == ptr->pNext: tail = ptr
+

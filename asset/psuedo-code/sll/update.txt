@@ -1,0 +1,3 @@
+for (ptr = head; ptr; ptr = ptr->pNext):
+    if ptr->val == x:
+        ptr->val = newVal

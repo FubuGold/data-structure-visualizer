@@ -1,0 +1,6 @@
+if root == nullptr: return false
+let cur = root
+for (char c : s):
+    if cur->ch[c] == nullptr: return false
+    cur = cur->ch[c]
+return cut->strCnt > 0

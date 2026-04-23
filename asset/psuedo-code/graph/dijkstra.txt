@@ -1,0 +1,12 @@
+init pq <min heap>, dis
+while !pq.empty:
+    let {u,curDis} = pq.top()
+    pq.pop()
+    if u == dest: return dis[dest]
+    if dis[u] != -1 and dis[u] < curDis: continue
+    for (Edge e from u):
+        let v = e.to, w = e.w
+        if dis[v] < curDis + w: continue
+        dis[v] = curDis + w
+        pq.push(dis[v], v)
+return -1

@@ -1,0 +1,6 @@
+if head == nullptr:
+    head = new Node(x)
+    tail = head
+else:
+    tail->pNext = new Node(x)
+    tail = tail->pNext

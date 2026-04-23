@@ -1,0 +1,10 @@
+if cur == nullptr: return false
+if id == s.size():
+    cur->cnt--, cur->strCnt--
+    return true
+if !remove(cur->ch[c],id+1,s): return false
+if cur->ch[c]->cnt == 0:
+    delete cur->ch[c]
+    cur->ch[c] = nullptr
+cur->cnt--
+return true

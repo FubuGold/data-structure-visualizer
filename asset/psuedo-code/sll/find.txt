@@ -1,0 +1,4 @@
+for (ptr = head; ptr; ptr = ptr->pNext):
+    if ptr->val == x:
+        return true
+return false

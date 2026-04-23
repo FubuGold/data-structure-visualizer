@@ -1,6 +1,14 @@
+AI-proof
+
 # Environment files
 *.env
 env.*
+
+# VScode folder
+.vscode
+
+# Build folder
+build
 
 # Prerequisites
 *.d

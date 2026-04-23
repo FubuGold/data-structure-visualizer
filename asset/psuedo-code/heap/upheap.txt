@@ -1,0 +1,3 @@
+while (id != 0 && a[pa(id)] < a[id]):
+    swap(a[pa(id)], a[id])
+    id = pa(id)

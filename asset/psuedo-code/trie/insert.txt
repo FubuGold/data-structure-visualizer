@@ -1,0 +1,8 @@
+if root == nullptr: root = new Node()
+let cur = root
+for (char c : s):
+    cur->cnt++
+    if cur->ch[c] == nullptr:
+        cur->ch[c] = new Node()
+    cur = cur->ch[c]
+cur->cnt++, cur->strCnt++

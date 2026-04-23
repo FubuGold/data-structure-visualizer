@@ -1,0 +1,346 @@
+#ifndef DATA_STRUCTURE_HANDLER
+#define DATA_STRUCTURE_HANDLER
+
+#include "data-structure.h"
+#include "../UI/GUI-visual-handler.h"
+#include "../UI/GUI-interactable-element.h"
+#include "../global/global.h"
+
+#include <SFML/Graphics.hpp>
+
+//======================================================//
+
+namespace Handler
+{
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class AVLTreeHandler
+{
+protected:
+
+    static constexpr int VALUE_MAX = 99, VALUE_MIN = 0;
+
+    std::vector<Global::TreeStructure> snapshot;
+    DataStructure::AVLTree tree;
+    std::shared_ptr<GUI::TreeVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = Global::ANIMATION_DELAY; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    AVLTreeHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::TreeVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void insert(int x);
+    void find(int x);
+    void remove(int x);
+    void update(int x,int newVal);
+    void random();
+    void clear();
+    void file();
+
+};
+
+//======================================================//
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class HeapHandler
+{
+protected:
+
+    static constexpr int VALUE_MAX = 99, VALUE_MIN = 0;
+
+    std::vector<Global::TreeStructure> snapshot;
+    DataStructure::Heap tree;
+    std::shared_ptr<GUI::TreeVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = Global::ANIMATION_DELAY; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    HeapHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::TreeVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void insert(int x);
+    void pop();
+    void updateById(int id,int newVal);
+    void removeById(int id);
+    void random();
+    void clear();
+    void file();
+
+};
+
+//======================================================//
+
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class SLLHandler
+{
+protected:
+
+    static constexpr int VALUE_MAX = 99, VALUE_MIN = 0;
+
+    std::vector<Global::TreeStructure> snapshot;
+    DataStructure::SinglyLinkedList list;
+    std::shared_ptr<GUI::SLLVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = Global::ANIMATION_DELAY; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    SLLHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::SLLVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void insert(int x);
+    void find(int x);
+    void remove(int x);
+    void update(int x,int newVal);
+    void random();
+    void clear();
+    void file();
+
+};
+
+//======================================================//
+
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class TrieHandler
+{
+protected:
+
+    static constexpr int VALUE_MAX = 99, VALUE_MIN = 0;
+
+    std::vector<Global::TreeStructure> snapshot;
+    DataStructure::Trie tree;
+    std::shared_ptr<GUI::TrieVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = Global::ANIMATION_DELAY; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    TrieHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::TrieVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void insert(const std::string &x);
+    void find(const std::string &x);
+    void remove(const std::string &x);
+    void update(const std::string &x,const std::string &newVal);
+    void random();
+    void clear();
+    void file();
+
+};
+
+//======================================================//
+
+/**
+ * @brief A middleman class to handle input, internal update and GUI update
+ * 
+ */
+class GraphHandler
+{
+protected:
+
+    static constexpr int MAX_N = 10, VALUE_MIN = 1, VALUE_MAX = 100;
+
+    std::vector<Global::GraphStructure> snapshot;
+    DataStructure::Graph graph;
+    std::shared_ptr<GUI::GraphVisualHandler> visualizer;
+    std::shared_ptr<GUI::HSlider> animationSlider;
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer;
+
+    // This is for locking the element
+    std::vector<std::shared_ptr<GUI::IInteractableElement>> lockableElement;
+
+    int curSnapshot = 0;
+
+    const float DELAY_TIME = Global::ANIMATION_DELAY * 4; // seconds
+    bool delaying = 0;
+    sf::Clock delayClock;
+
+    bool animationLock = 0;
+    bool buttonLock = 0;
+
+    void preprocessing();
+    void postprocessing();
+
+    void lockElement();
+    void unlockElement();
+
+    void setSnapshot(int id);
+
+public:
+
+    GraphHandler();
+    
+    void setVisualizer(std::shared_ptr<GUI::GraphVisualHandler> visualizer_p);
+    void setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p);
+    void setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p);
+
+    void addLockableElement(std::shared_ptr<GUI::IInteractableElement> element);
+
+    void loop();
+
+    void endAnimation();
+
+    void fullUndo();
+    void undo();
+    void redo();
+
+    void buildGraph(const std::string &txt);
+    void dijkstra(int st,int ed);
+    void prim();
+    void random();
+    void clear();
+    void file();
+
+};
+}
+
+#endif // DATA_STRUCTURE_HANDLER
