@@ -122,4 +122,29 @@ bool trieValidator(const std::string &filename)
     return true;
 }
 
+bool graphValidator(const std::string &filename)
+{
+    std::ifstream inp(filename);
+    int n,m;
+    if (!(inp >> n >> m)) return false;
+    for (int i = 0; i < m; i++) {
+        int x,y,w;
+        if (!(inp >> x >> y >> w)) return false;
+        if (x >= n || y >= n) return false;
+    }
+    return true;
+}
+
+bool graphValidator(std::stringstream &ss)
+{
+    int n,m;
+    if (!(ss >> n >> m)) return false;
+    for (int i = 0; i < m; i++) {
+        int x,y,w;
+        if (!(ss >> x >> y >> w)) return false;
+        if (x >= n || y >= n) return false;
+    }
+    return true;
+}
+
 } // namespace Validator

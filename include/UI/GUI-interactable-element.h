@@ -22,21 +22,22 @@ protected:
     sf::RenderTarget *target_ptr;
     bool locked = false;
 public:
+    sf::Color baseColor, disableColor = Global::colorSet[0][Global::COLOR_TYPE::DISABLE];
     IInteractableElement() = default;
     virtual ~IInteractableElement() = default;
     virtual void handleEvent(const std::optional<sf::Event>& e) = 0;
     virtual bool containPos(sf::Vector2f pos) = 0;
-    void setWindow(sf::RenderTarget *target_ptr);
+    virtual void setWindow(sf::RenderTarget *target_ptr);
     /**
      * @brief This will completely lock the element, drop all event. Unlock by outside call.
      * 
      */
-    void lock();
+    virtual void lock();
     /**
      * @brief Unlock the element
      * 
      */
-    void unlock();
+    virtual void unlock();
 };
 
 /**
@@ -95,7 +96,6 @@ using rectCallback_t = std::function<void(sf::RectangleShape&,sf::Text&)>;
 class RectangleButton : public InteractableElement<rectCallback_t,sf::RectangleShape&,sf::Text&>
 {
 protected:
-
     sf::RectangleShape rect;
     sf::Text text;
 
@@ -125,6 +125,9 @@ public:
     void handleEvent(const std::optional<sf::Event>& e) override;
 
     void setString(const std::string &s);
+
+    void lock() override;
+    void unlock() override;
 };
 
 //======================================================//
@@ -176,6 +179,9 @@ public:
     bool containPos(sf::Vector2f pos) override;
 
     void handleEvent(const std::optional<sf::Event>& e) override; 
+
+    void lock() override;
+    void unlock() override;
 };
 
 //======================================================//
@@ -230,6 +236,52 @@ public:
     void setValue(float val);
 
     void setNewRange(float startValue, float endValue, int numSteps);
+};
+
+//======================================================//
+
+class MultilineTextField : public IInteractableElement
+{
+private:
+    sf::RectangleShape box;
+    sf::RectangleShape caretShape;
+    sf::Text textTemplate; // used to measure & render
+
+    std::string content;
+    inputFieldFilterCb_t filter;
+    std::size_t caretIndex = 0;
+
+    float scrollX = 0.f;
+    float scrollY = 0.f;
+    float padding = 5.f;
+
+    bool focused = false;
+
+    sf::Clock caretClock;
+    bool showCaret = true;
+
+    float lineHeight;
+
+    std::vector<std::string> splitLines() const;
+    sf::Vector2f getCaretPixelPos() const;
+
+    void updateScroll();
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
+public:
+    MultilineTextField(
+        sf::Vector2f size,
+        sf::Vector2f pos,
+        const sf::Font& font = Global::numberFont,
+        unsigned int charSize = 22
+    );
+
+    void handleEvent(const std::optional<sf::Event>& e) override;
+    bool containPos(sf::Vector2f pos) override;
+
+    void update();
+    void setFilter(inputFieldFilterCb_t filter);
+    std::string getValue();
 };
 
 }

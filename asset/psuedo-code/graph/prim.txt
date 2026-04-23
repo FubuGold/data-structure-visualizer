@@ -1,0 +1,14 @@
+init pq <min heap>, vst
+let cnt = 1, res = 0
+while !pq.empty:
+    let {u,curW} = pq.top()
+    pq.pop()
+    if !vst[u]:
+        res += curW, cnt++
+    if cnt == n: break
+    vst[u] = 1
+    for (Edge e from u):
+        let v = e.to, w = e.w
+        if !vst[v]: pq.push(w,v)
+if cnt < n: return -1
+return res

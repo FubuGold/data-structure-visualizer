@@ -9,13 +9,15 @@
 namespace Global
 {
 
-inline const int numScene = 8;
+inline const float ANIMATION_DELAY = 0.3;
+
+inline const int numScene = 7;
 
 enum class SceneState
 {
     MENU,
     SLL, HEAP, AVL,
-    TRIE, SP, MST,
+    TRIE, GRAPH,
     SETTING
 };
 template <typename T>
@@ -31,7 +33,8 @@ inline sf::Font numberFont("asset/font/Play-Regular.ttf");
 
 inline float animationSpeed = 1;
 
-enum COLOR_TYPE {
+enum COLOR_TYPE
+{
     BACKGROUND,
     NETURAL,
     MAIN,
@@ -43,19 +46,21 @@ enum COLOR_TYPE {
 
 inline const sf::Color colorSet[1][7] =  {
     {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x539F64FF), sf::Color(0xF94842FF),
-     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA180)}
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)}
 };
 
 //======================================================//
 
-enum class SLL_FUNC {
+enum class SLL_FUNC
+{
     INSERT,
     FIND,
     REMOVE,
     UPDATE
 };
 
-enum class HEAP_FUNC {
+enum class HEAP_FUNC
+{
     INSERT,
     POP,
     REMOVE_BY_ID,
@@ -64,7 +69,8 @@ enum class HEAP_FUNC {
     UPHEAP
 };
 
-enum class AVL_FUNC {
+enum class AVL_FUNC
+{
     INSERT,
     FIND,
     REMOVE,
@@ -72,7 +78,8 @@ enum class AVL_FUNC {
     BALANCE
 };
 
-enum class TRIE_FUNC {
+enum class TRIE_FUNC
+{
     INSERT,
     FIND,
     REMOVE,
@@ -101,6 +108,31 @@ struct TreeStructure
         }
         return out;
     }
+};
+
+enum class GRAPH_FUNC
+{
+    DIJKSTRA,
+    PRIM
+};
+
+struct GraphStructure
+{
+    struct Edge
+    {
+        int x,y,w;
+        Edge(){}
+        Edge(int x,int y,int w) : x(x), y(y), w(w) {}
+        Edge(int x,int y,int w,bool isHighligthed, bool isSpecial) 
+            : x(x), y(y), w(w), isHighlighted(isHighlighted), isSpecial(isSpecial) {}
+        bool isHighlighted;
+        bool isSpecial;
+    };
+    int codeFunc;
+    int codeLine;
+    int numNode;
+    std::vector<Edge> edgeList;
+    std::vector<std::pair<bool,bool>> nodeState;
 };
 
 //======================================================//

@@ -147,15 +147,16 @@ void Node::setSpecial(bool value)
 Line::Line(
     sf::Vector2f startPos,
     sf::Vector2f endPos,
+    bool directed,
     std::string text,
     int lineThickness,
     int textSize,
     int textOutlineThickness,
     sf::Color lineColor,
     sf::Color highlightColor,
+    sf::Color specialColor,
     sf::Color textColor,
-    sf::Color textOutlineColor,
-    bool directed
+    sf::Color textOutlineColor
 ) : startPos(startPos), endPos(endPos), lineThickness(lineThickness), text(Global::numberFont)
 {
     this->line.setFillColor(lineColor);
@@ -168,6 +169,10 @@ Line::Line(
     this->text.setFillColor(textColor);
     this->text.setOutlineColor(textOutlineColor);
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
+    this->textBg.setSize(this->text.getLocalBounds().size);
+    this->textBg.setOrigin(this->textBg.getLocalBounds().position + this->textBg.getLocalBounds().size * 0.5f);
+    this->textBg.setFillColor(sf::Color::White);
+    this->textBg.setPosition(this->text.getPosition());
     // this->text.setOrigin(
     //     {0,this->text.getLocalBounds().position.x + this->text.getLocalBounds().size.x * 0.5f}
     // );
@@ -183,6 +188,7 @@ Line::Line(
 
     this->normalColor = lineColor;
     this->highlightColor = highlightColor;
+    this->specialColor = specialColor;
 
     this->directed = directed;
 
@@ -192,6 +198,7 @@ Line::Line(
 void Line::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
     target.draw(this->line,state);
+    target.draw(textBg);
     if (this->directed) target.draw(this->arrowHead,state);
     target.draw(this->text,state);
 }
@@ -215,24 +222,42 @@ void Line::setupLine()
     // debugDots.emplace_back(this->line.getGlobalBounds().position + this->line.getGlobalBounds().size);
 
     this->text.setPosition((this->startPos + this->endPos) * 0.5f);
+    this->textBg.setPosition(this->text.getPosition());
 }
 
-void Line::highlight()
+void Line::setHighlight(bool val)
 {
-    this->line.setFillColor(highlightColor);
-    this->arrowHead.setFillColor(highlightColor);
+    if (val) {
+        this->line.setFillColor(highlightColor);
+        this->arrowHead.setFillColor(highlightColor);
+    }
+    else {
+        setSpecial(isSpecial);
+    }
 }
-void Line::unhighlight()
+void Line::setSpecial(bool val)
 {
-    this->line.setFillColor(normalColor);
-    this->arrowHead.setFillColor(normalColor);
+    isSpecial = val;
+    if (val) {
+        this->line.setFillColor(specialColor);
+        this->arrowHead.setFillColor(specialColor);
+    }
+    else {
+        this->line.setFillColor(normalColor);
+        this->arrowHead.setFillColor(normalColor);
+    }
 }
+
 
 void Line::setString(const std::string &s)
 {
     this->text.setString(s);
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
     this->text.setPosition((this->startPos + this->endPos) * 0.5f);
+    this->textBg.setSize(this->text.getLocalBounds().size);
+    this->textBg.setOrigin(this->textBg.getLocalBounds().position + this->textBg.getLocalBounds().size * 0.5f);
+    this->textBg.setFillColor(sf::Color::White);
+    this->textBg.setPosition((this->startPos + this->endPos) * 0.5f);
 }
 
 void Line::setStartPos(sf::Vector2f newStartPos)

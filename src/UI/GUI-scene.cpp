@@ -30,6 +30,11 @@ void Scene::addElement(std::shared_ptr<T> element_ptr)
     }
 }
 
+void Scene::addZoomElement(std::shared_ptr<sf::Drawable> element_ptr)
+{
+    zoomElements.push_back(element_ptr);
+}
+
 void Scene::handleEvent(const std::optional<sf::Event>& e)
 {
     for (std::shared_ptr<IInteractableElement> element : interactableElements) {
@@ -42,21 +47,30 @@ void Scene::setup()
     for (std::shared_ptr<IInteractableElement> element : interactableElements) {
         element->setWindow(target_ptr);
     }
+    zoomView.setWindow(target_ptr);
+    addElement(std::shared_ptr<GUI::ZoomView>(&zoomView));
 }
 
-void Scene::draw(sf::RenderTarget& target, sf::RenderStates state)
+void Scene::draw(sf::RenderWindow& target, sf::RenderStates state)
 {
     for (std::shared_ptr<sf::Drawable> element : elements) {
         target.draw(*element,state);
     }
 
     // Debug
-    for (int i=0;i<debugDots.size();i++) {
-        target.draw(debugDots[i],state);
+    // for (int i=0;i<debugDots.size();i++) {
+    //     target.draw(debugDots[i],state);
+    // }
+}
+
+void Scene::drawZoom()
+{
+    for (std::shared_ptr<sf::Drawable> element : zoomElements) {
+        this->zoomView.draw(*element);
     }
 }
 
-void Scene::setWindow(sf::RenderTarget *target_ptr)
+void Scene::setWindow(sf::RenderWindow *target_ptr)
 {
     this->target_ptr = target_ptr;
 }
@@ -198,6 +212,7 @@ void MenuScene::setup()
         "Singly Linked List", 30, 0, 0,
         Global::colorSet[0][Global::MAIN], sf::Color::White
     );
+    sllTitle->disableColor = Global::colorSet[0][Global::MAIN];
     sllTitle->lock();
     addElement(sllTitle);
 
@@ -223,6 +238,7 @@ void MenuScene::setup()
         "Heap", 30, 0, 0,
         Global::colorSet[0][Global::MAIN], sf::Color::White
     );
+    heapTitle->disableColor = Global::colorSet[0][Global::MAIN];
     heapTitle->lock();
     addElement(heapTitle);
 
@@ -248,6 +264,7 @@ void MenuScene::setup()
         "AVL Tree", 30, 0, 0,
         Global::colorSet[0][Global::MAIN], sf::Color::White
     );
+    avlTitle->disableColor = Global::colorSet[0][Global::MAIN];
     avlTitle->lock();
     addElement(avlTitle);
 
@@ -259,7 +276,7 @@ void MenuScene::setup()
     // Trie
 
     std::shared_ptr<GUI::RectangleButton> trieButton = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,248), sf::Vector2f(66,477),
+        sf::Vector2f(346,248), sf::Vector2f(266,477),
         "",20,0,0,
         sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
     );
@@ -269,66 +286,68 @@ void MenuScene::setup()
     addElement(trieButton);
 
     std::shared_ptr<GUI::RectangleButton> trieTitle = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,68), sf::Vector2f(66,657),
+        sf::Vector2f(346,68), sf::Vector2f(266,657),
         "Trie", 30, 0, 0,
         Global::colorSet[0][Global::MAIN], sf::Color::White
     );
+    trieTitle->disableColor = Global::colorSet[0][Global::MAIN];
     trieTitle->lock();
     addElement(trieTitle);
 
     std::shared_ptr<sf::Sprite> trieThumbnail = std::make_shared<sf::Sprite>(thumbnailImg[TRIE]);
-    trieThumbnail->setPosition({66,477});
+    trieThumbnail->setPosition({266,477});
     addElement(trieThumbnail);
 
     //======================================================//
-    // Shortest path
+    // Graph
 
-    std::shared_ptr<GUI::RectangleButton> spButton = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,248), sf::Vector2f(467,477),
+    std::shared_ptr<GUI::RectangleButton> graphButton = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(346,248), sf::Vector2f(667,477),
         "",20,0,0,
         sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
     );
-    spButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
-
+    graphButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
+        Global::curAppState = Global::SceneState::GRAPH;
     });
-    addElement(spButton);
+    addElement(graphButton);
 
-    std::shared_ptr<GUI::RectangleButton> spTitle = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,68), sf::Vector2f(467,657),
-        "Shortest Path", 30, 0, 0,
+    std::shared_ptr<GUI::RectangleButton> graphTitle = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(346,68), sf::Vector2f(667,657),
+        "Graph", 30, 0, 0,
         Global::colorSet[0][Global::MAIN], sf::Color::White
     );
-    spTitle->lock();
-    addElement(spTitle);
+    graphTitle->disableColor = Global::colorSet[0][Global::MAIN];
+    graphTitle->lock();
+    addElement(graphTitle);
 
-    std::shared_ptr<sf::Sprite> spThumbnail = std::make_shared<sf::Sprite>(thumbnailImg[SP]);
-    spThumbnail->setPosition({467,477});
-    addElement(spThumbnail);
+    std::shared_ptr<sf::Sprite> graphThumnail = std::make_shared<sf::Sprite>(thumbnailImg[SP]);
+    graphThumnail->setPosition({667,477});
+    addElement(graphThumnail);
 
     //======================================================//
-    // Shortest path
+    // MST ?
 
-    std::shared_ptr<GUI::RectangleButton> mstButton = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,248), sf::Vector2f(868,477),
-        "",20,0,0,
-        sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
-    );
-    mstButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
+    // std::shared_ptr<GUI::RectangleButton> graphButton = std::make_shared<GUI::RectangleButton>(
+    //     sf::Vector2f(346,248), sf::Vector2f(868,477),
+    //     "",20,0,0,
+    //     sf::Color::Transparent, sf::Color::Transparent, sf::Color::Transparent
+    // );
+    // graphButton->setReleaseCallback([](sf::RectangleShape &rect, sf::Text &text){
+    //     Global::curAppState = Global::SceneState::GRAPH;
+    // });
+    // addElement(graphButton);
 
-    });
-    addElement(mstButton);
+    // std::shared_ptr<GUI::RectangleButton> graphTitle = std::make_shared<GUI::RectangleButton>(
+    //     sf::Vector2f(346,68), sf::Vector2f(868,657),
+    //     "Shortest Path", 30, 0, 0,
+    //     Global::colorSet[0][Global::MAIN], sf::Color::White
+    // );
+    // graphTitle->lock();
+    // addElement(graphTitle);
 
-    std::shared_ptr<GUI::RectangleButton> mstTitle = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(346,68), sf::Vector2f(868,657),
-        "Shortest Path", 30, 0, 0,
-        Global::colorSet[0][Global::MAIN], sf::Color::White
-    );
-    mstTitle->lock();
-    addElement(mstTitle);
-
-    std::shared_ptr<sf::Sprite> mstThumbnail = std::make_shared<sf::Sprite>(thumbnailImg[MST]);
-    mstThumbnail->setPosition({868,477});
-    addElement(mstThumbnail);
+    // std::shared_ptr<sf::Sprite> graphThumnail = std::make_shared<sf::Sprite>(thumbnailImg[MST]);
+    // graphThumnail->setPosition({868,477});
+    // addElement(graphThumnail);
 
     Scene::setup();
 }
@@ -342,16 +361,19 @@ void VisualScene::setup()
 
     std::cerr << "Visual scene setup start\n";
 
+    zoomView.setCenter(sf::Vector2f(1280,700) * 0.5f + sf::Vector2f(0,50));
+    zoomView.setSize(sf::Vector2f(1280,700));
+
     //======================================================//
     // Header bar
 
     std::shared_ptr<sf::RectangleShape> headerBarBg = std::make_shared<sf::RectangleShape>();
     headerBarBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::MAIN]);
-    headerBarBg->setSize({1280,80});
+    headerBarBg->setSize({1280,50});
     addElement(headerBarBg);
 
     this->inputField = std::make_shared<GUI::TextInputField>(
-        sf::Vector2f(164,40), sf::Vector2f(24,20), sf::Vector2f(0,0),
+        sf::Vector2f(164,26), sf::Vector2f(29,12), sf::Vector2f(0,0),
         9, 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -365,7 +387,7 @@ void VisualScene::setup()
     // std::cerr << "Input field added\n";
 
     this->insertBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(208,20),
+        sf::Vector2f(110,26), sf::Vector2f(213,12),
         "Insert", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -376,7 +398,7 @@ void VisualScene::setup()
     std::cerr << "Insert added\n";
 
     this->removeBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(336,20),
+        sf::Vector2f(110,26), sf::Vector2f(341,12),
         "Delete", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -387,7 +409,7 @@ void VisualScene::setup()
     // std::cerr << "Remove added\n";
 
     this->findBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(464,20),
+        sf::Vector2f(110,26), sf::Vector2f(469,12),
         "Find", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -398,7 +420,7 @@ void VisualScene::setup()
     // std::cerr << "Find added\n";
 
     this->updateBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(592,20),
+        sf::Vector2f(110,26), sf::Vector2f(597,12),
         "Update", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -409,7 +431,7 @@ void VisualScene::setup()
     // std::cerr << "Update added\n";
 
     this->updField = std::make_shared<GUI::TextInputField>(
-        sf::Vector2f(203,40), sf::Vector2f(720,20), sf::Vector2f(10,0),
+        sf::Vector2f(203,26), sf::Vector2f(725,12), sf::Vector2f(10,0),
         9, 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -427,11 +449,11 @@ void VisualScene::setup()
     updFieldText->setCharacterSize(22);
     updFieldText->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
     updFieldText->setOrigin(updFieldText->getLocalBounds().position + updFieldText->getLocalBounds().size * 0.5f);
-    updFieldText->setPosition(sf::Vector2f(727,27) + sf::Vector2f(29,26) * 0.5f);
+    updFieldText->setPosition(sf::Vector2f(732,12) + sf::Vector2f(29,26) * 0.5f);
     addElement(updFieldText);
 
     this->clearBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(1008,20),
+        sf::Vector2f(110,26), sf::Vector2f(1013,12),
         "Clear", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -440,7 +462,7 @@ void VisualScene::setup()
     addElement(this->clearBtn);
 
     this->randomBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(1135,20),
+        sf::Vector2f(110,26), sf::Vector2f(1140,12),
         "Random", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -455,12 +477,12 @@ void VisualScene::setup()
 
     std::shared_ptr<sf::RectangleShape> footerBarBg = std::make_shared<sf::RectangleShape>();
     footerBarBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::MAIN]);
-    footerBarBg->setSize({1280,80});
-    footerBarBg->setPosition({0,720});
+    footerBarBg->setSize({1280,50});
+    footerBarBg->setPosition({0,750});
     addElement(footerBarBg);
 
     this->fullUndoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(40,40), sf::Vector2f(24,740),
+        sf::Vector2f(40,26), sf::Vector2f(29,762),
         "<<", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -469,7 +491,7 @@ void VisualScene::setup()
     addElement(this->fullUndoBtn);
 
     this->undoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(40,40), sf::Vector2f(82,740),
+        sf::Vector2f(40,26), sf::Vector2f(87,762),
         "<", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -481,12 +503,12 @@ void VisualScene::setup()
     animationStepBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
     animationStepBg->setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
     animationStepBg->setOutlineThickness(2);
-    animationStepBg->setSize({528,40});
-    animationStepBg->setPosition({140,740});
+    animationStepBg->setSize({528,26});
+    animationStepBg->setPosition({145,762});
     addElement(animationStepBg);
 
     this->animationSlider = std::make_shared<GUI::HSlider>(
-        sf::Vector2f(508,26), sf::Vector2f(150,747),
+        sf::Vector2f(508,18), sf::Vector2f(155,766),
         1, 0, 1, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         sf::Color(0xA0A0A0FF), 
@@ -495,7 +517,7 @@ void VisualScene::setup()
     addElement(this->animationSlider);
 
     this->redoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(40,40), sf::Vector2f(686,740),
+        sf::Vector2f(40,26), sf::Vector2f(691,762),
         ">", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -504,7 +526,7 @@ void VisualScene::setup()
     addElement(this->redoBtn);
 
     this->fullRedoBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(40,40), sf::Vector2f(744,740),
+        sf::Vector2f(40,26), sf::Vector2f(749,762),
         ">>", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -515,13 +537,13 @@ void VisualScene::setup()
     std::cerr << "Added animation slider\n";
 
     std::shared_ptr<GUI::ValueText<std::string>> animationSpdDisplay = std::make_shared<GUI::ValueText<std::string>>(
-        sf::Vector2f(872,747) + sf::Vector2f(7,-3),
+        sf::Vector2f(877,762) + sf::Vector2f(7,-3),
         22, 0, Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
     );
     *animationSpdDisplay = "1x";
 
     std::shared_ptr<GUI::RectangleButton> animationSpdBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(802,740),
+        sf::Vector2f(110,26), sf::Vector2f(807,762),
         "", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -541,13 +563,13 @@ void VisualScene::setup()
     animationSpdText->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
     animationSpdText->setCharacterSize(22);    
     animationSpdText->setOrigin(animationSpdText->getLocalBounds().position + animationSpdText->getLocalBounds().size * 0.5f);
-    animationSpdText->setPosition(sf::Vector2f(805,748) + sf::Vector2f(70, 26) * 0.5f);
+    animationSpdText->setPosition(sf::Vector2f(807,762) + sf::Vector2f(70, 26) * 0.5f);
     addElement(animationSpdText);
 
     std::cerr << "Added speed button\n";
 
     this->fileBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(969,740),
+        sf::Vector2f(110,26), sf::Vector2f(974,762),
         "File", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -556,7 +578,7 @@ void VisualScene::setup()
     addElement(this->fileBtn);
 
     std::shared_ptr<GUI::RectangleButton> menuBtn = std::make_shared<GUI::RectangleButton>(
-        sf::Vector2f(110,40), sf::Vector2f(1135,740),
+        sf::Vector2f(110,26), sf::Vector2f(1140,762),
         "Menu", 22, 0, 2,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
         Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
@@ -584,13 +606,14 @@ void SLLScene::setup()
     std::cerr << "AVL scene setup start\n";
 
     this->listVisual = std::make_shared<GUI::SLLVisualHandler>(
-        sf::Vector2f{1280, 640}, sf::Vector2f(0, 80), 320, 30, 60
+        sf::Vector2f{1280, 700}, sf::Vector2f(0, 50), 320, 30, 60
     );
     sllHandler.setVisualizer(listVisual);
-    addElement(listVisual);
+    // addElement(listVisual);
+    addZoomElement(listVisual);
 
     sllHandler.setAnimationSlider(this->animationSlider);
-    this->animationSlider->lock();
+    // this->animationSlider->lock();
 
     sllHandler.addLockableElement(this->insertBtn);
     sllHandler.addLockableElement(this->removeBtn);
@@ -702,12 +725,15 @@ void HeapScene::setup()
 
     std::cerr << "AVL scene setup start\n";
 
-    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
+    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(
+        sf::Vector2f{1280, 700}, sf::Vector2f{0, 50}, 60
+    );
     heapHandler.setVisualizer(treeVisual);
-    addElement(treeVisual);
+    // addElement(treeVisual);
+    addZoomElement(treeVisual);
 
     heapHandler.setAnimationSlider(this->animationSlider);
-    this->animationSlider->lock();
+    // this->animationSlider->lock();
 
     heapHandler.addLockableElement(this->insertBtn);
     heapHandler.addLockableElement(this->removeBtn);
@@ -825,12 +851,15 @@ void AVLScene::setup()
 
     std::cerr << "AVL scene setup start\n";
 
-    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 60);
+    this->treeVisual = std::make_shared<GUI::TreeVisualHandler>(
+        sf::Vector2f{1280, 700}, sf::Vector2f{0, 50}, 60
+    );
     avlHandler.setVisualizer(treeVisual);
-    addElement(treeVisual);
+    // addElement(treeVisual);
+    addZoomElement(treeVisual);
 
     avlHandler.setAnimationSlider(this->animationSlider);
-    this->animationSlider->lock();
+    // this->animationSlider->lock();
 
     avlHandler.addLockableElement(this->insertBtn);
     avlHandler.addLockableElement(this->removeBtn);
@@ -948,12 +977,15 @@ void TrieScene::setup()
 
     std::cerr << "AVL scene setup start\n";
 
-    this->treeVisual = std::make_shared<GUI::TrieVisualHandler>(sf::Vector2f{1280, 640}, sf::Vector2f{0, 80}, 70, 30);
+    this->treeVisual = std::make_shared<GUI::TrieVisualHandler>(
+        sf::Vector2f{1280, 700}, sf::Vector2f{0, 50}, 70, 30
+    );
     trieHandler.setVisualizer(treeVisual);
-    addElement(treeVisual);
+    // addElement(treeVisual);
+    addZoomElement(treeVisual);
 
     trieHandler.setAnimationSlider(this->animationSlider);
-    this->animationSlider->lock();
+    // this->animationSlider->lock();
 
     trieHandler.addLockableElement(this->insertBtn);
     trieHandler.addLockableElement(this->removeBtn);
@@ -1051,6 +1083,334 @@ void TrieScene::setup()
 void TrieScene::loopUpdate()
 {
     trieHandler.loop();
+}
+
+//======================================================//
+
+void GraphScene::setup()
+{
+    this->graphVisual = std::make_shared<GraphVisualHandler>(
+        sf::Vector2f(1280,700), sf::Vector2f(0,50)
+    );
+    handler.setVisualizer(graphVisual);
+    // addElement(graphVisual);
+    addZoomElement(graphVisual);
+
+    std::shared_ptr<sf::RectangleShape> headerBarBg = std::make_shared<sf::RectangleShape>();
+    headerBarBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::MAIN]);
+    headerBarBg->setSize({1280,50});
+    addElement(headerBarBg);
+
+    std::shared_ptr<GUI::PopupGroup> inputGroup = std::make_shared<GUI::PopupGroup>();
+    std::shared_ptr<sf::RectangleShape> inputBg = std::make_shared<sf::RectangleShape>();
+    inputBg->setSize({304,402});
+    inputBg->setPosition({29,68});
+    inputBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::MAIN]);
+    inputBg->setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    inputBg->setOutlineThickness(2);
+    inputGroup->addElement(inputBg);
+    graphInputField = std::make_shared<GUI::MultilineTextField>(
+        sf::Vector2f{285,341}, sf::Vector2f{38,77}
+    );
+    graphInputField->setFilter([this](char32_t chr) -> bool {
+        return (chr >= '0' && chr <= '9') || chr == '\n' || chr == ' ';
+    });
+    inputGroup->addElement(graphInputField);
+    std::shared_ptr<GUI::RectangleButton> inputSubmit = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(213,432),
+        "Submit", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    inputSubmit->setReleaseCallback(
+        [this,inputGroup](sf::RectangleShape &rect, sf::Text &text){
+            std::string value = this->graphInputField->getValue();
+            this->handler.buildGraph(value);
+            inputGroup->close();
+        }
+    );
+    inputGroup->addElement(inputSubmit);
+    addElement(inputGroup);
+
+    std::shared_ptr<GUI::RectangleButton> updateBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(29,12),
+        "Update", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(updateBtn);
+    handler.addLockableElement(updateBtn);
+    updateBtn->setReleaseCallback([this,inputGroup](sf::RectangleShape &rect, sf::Text &text){
+        inputGroup->open();
+    });
+
+    std::shared_ptr<GUI::RectangleButton> primBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(156,12),
+        "Prim", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(primBtn);
+    primBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        handler.prim();
+    });
+    handler.addLockableElement(primBtn);
+
+    std::shared_ptr<GUI::RectangleButton> dijkstraBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(283,12),
+        "Dijkstra", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(dijkstraBtn);
+    handler.addLockableElement(dijkstraBtn);
+    
+    std::shared_ptr<GUI::TextInputField> dijkstraFromField = std::make_shared<GUI::TextInputField>(
+        sf::Vector2f(120,26), sf::Vector2f(410,12),
+        sf::Vector2f(30,1), 4,
+        22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    dijkstraFromField->setFilter([this](char32_t chr) -> bool {
+        return chr >= '0' && chr <= '9';
+    });
+    addElement(dijkstraFromField);
+    handler.addLockableElement(dijkstraFromField);
+
+    std::shared_ptr<GUI::RectangleButton> dijkstraFromFieldTxt = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(60,26), sf::Vector2f(410,12),
+        "From:", 22, 0, 0,
+        sf::Color::Transparent,
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        sf::Color::Transparent
+    );
+    dijkstraFromFieldTxt->disableColor = sf::Color::Transparent;
+    dijkstraFromFieldTxt->lock();
+    addElement(dijkstraFromFieldTxt);
+
+    std::shared_ptr<GUI::TextInputField> dijkstraToField = std::make_shared<GUI::TextInputField>(
+        sf::Vector2f(120,26), sf::Vector2f(547,12),
+        sf::Vector2f(30,1), 4,
+        22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    dijkstraToField->setFilter([this](char32_t chr) -> bool {
+        return chr >= '0' && chr <= '9';
+    });
+    addElement(dijkstraToField);
+    handler.addLockableElement(dijkstraToField);
+
+    std::shared_ptr<GUI::RectangleButton> dijkstraToFieldTxt = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(60,26), sf::Vector2f(547,12),
+        "To:", 22, 0, 0,
+        sf::Color::Transparent,
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        sf::Color::Transparent
+    );
+    dijkstraToFieldTxt->disableColor = sf::Color::Transparent;
+    dijkstraToFieldTxt->lock();
+    addElement(dijkstraToFieldTxt);
+
+    dijkstraBtn->setReleaseCallback([this,dijkstraFromField,dijkstraToField](sf::RectangleShape &rect, sf::Text &text){
+        std::string fromTxt = dijkstraFromField->getValue(), toTxt = dijkstraToField->getValue();
+        if (fromTxt == "" || toTxt == "") return;
+        handler.dijkstra(stringToInt(fromTxt), stringToInt(toTxt));
+    });
+
+
+    std::shared_ptr<GUI::RectangleButton> clearBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(1013,12),
+        "Clear", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    clearBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        handler.clear();
+    });
+    addElement(clearBtn);
+    handler.addLockableElement(clearBtn);
+
+    std::shared_ptr<GUI::RectangleButton> randomBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(1140,12),
+        "Random", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    randomBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        handler.random();
+    });
+    addElement(randomBtn);
+    handler.addLockableElement(randomBtn);
+
+    //======================================================//
+    // Footer bar
+
+    std::shared_ptr<sf::RectangleShape> footerBarBg = std::make_shared<sf::RectangleShape>();
+    footerBarBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::MAIN]);
+    footerBarBg->setSize({1280,50});
+    footerBarBg->setPosition({0,750});
+    addElement(footerBarBg);
+
+    std::shared_ptr<GUI::RectangleButton> fullUndoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,26), sf::Vector2f(29,762),
+        "<<", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(fullUndoBtn);
+    handler.addLockableElement(fullUndoBtn);
+
+    std::shared_ptr<GUI::RectangleButton> undoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,26), sf::Vector2f(87,762),
+        "<", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(undoBtn);
+    handler.addLockableElement(undoBtn);
+
+    std::shared_ptr<sf::RectangleShape> animationStepBg = std::make_shared<sf::RectangleShape>();
+    animationStepBg->setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
+    animationStepBg->setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    animationStepBg->setOutlineThickness(2);
+    animationStepBg->setSize({528,26});
+    animationStepBg->setPosition({145,762});
+    addElement(animationStepBg);
+
+    std::shared_ptr<GUI::HSlider> animationSlider = std::make_shared<GUI::HSlider>(
+        sf::Vector2f(508,18), sf::Vector2f(155,766),
+        1, 0, 1, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        sf::Color(0xA0A0A0FF), 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(animationSlider);
+    handler.setAnimationSlider(animationSlider);
+
+    std::shared_ptr<GUI::RectangleButton> redoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,26), sf::Vector2f(691,762),
+        ">", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    addElement(redoBtn);
+    handler.addLockableElement(redoBtn);
+
+    std::shared_ptr<GUI::RectangleButton> fullRedoBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(40,26), sf::Vector2f(749,762),
+        ">>", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    fullRedoBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->handler.endAnimation();
+    });
+    addElement(fullRedoBtn);
+
+    std::cerr << "Added animation slider\n";
+
+    std::shared_ptr<GUI::ValueText<std::string>> animationSpdDisplay = std::make_shared<GUI::ValueText<std::string>>(
+        sf::Vector2f(877,762) + sf::Vector2f(8,-3),
+        22, 0, Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    *animationSpdDisplay = "1x";
+
+    std::shared_ptr<GUI::RectangleButton> animationSpdBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(807,762),
+        "", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    animationSpdBtn->setReleaseCallback([animationSpdDisplay](sf::RectangleShape &rect, sf::Text &text) {
+        Global::animationSpeed += 1;
+        if (Global::animationSpeed > 5) Global::animationSpeed = 1;
+        *animationSpdDisplay = std::to_string((int)Global::animationSpeed) + "x";
+    });
+
+    addElement(animationSpdBtn);
+    addElement(animationSpdDisplay);
+
+    std::shared_ptr<GUI::RectangleButton> animationSpdText = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(70,26), sf::Vector2f(807,762),
+        "Speed", 22, 0, 0,
+        sf::Color::Transparent, 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        sf::Color::Transparent
+    );
+    addElement(animationSpdText);
+
+    std::cerr << "Added speed button\n";
+
+    std::shared_ptr<GUI::RectangleButton> fileBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(974,762),
+        "File", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    fileBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        handler.file();
+    });
+    addElement(fileBtn);
+    handler.addLockableElement(fileBtn);
+
+    std::shared_ptr<GUI::RectangleButton> menuBtn = std::make_shared<GUI::RectangleButton>(
+        sf::Vector2f(110,26), sf::Vector2f(1140,762),
+        "Menu", 22, 0, 2,
+        Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL], 
+        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+    );
+    menuBtn->setReleaseCallback([this](sf::RectangleShape &rect, sf::Text &text){
+        this->clear();
+        Global::curAppState = Global::SceneState::MENU;
+    });
+    addElement(menuBtn);
+
+    // Global::GRAPH_FUNC::
+
+    std::vector<std::string> codeFilename = {
+        "./asset/psuedo-code/graph/dijkstra.txt",
+        "./asset/psuedo-code/graph/prim.txt",
+    };
+
+    std::vector<std::string> funcName = {
+        "Dijkstra", "Prim"
+    };
+    
+    std::shared_ptr<GUI::CodeVisualHandler> codeVisual = std::make_shared<GUI::CodeVisualHandler>(
+        sf::Vector2f(860,470), sf::Vector2f(420,18),
+        12,
+        funcName, codeFilename
+    );
+    addElement(codeVisual);
+    handler.setCodeVisualizer(codeVisual);
+
+    Scene::setup();
+
+    std::cerr << "Graph scene completed\n";
+
+}
+
+void GraphScene::loopUpdate()
+{
+    handler.loop();
+    graphInputField->update();
 }
 
 }

@@ -9,7 +9,7 @@ SFML_DEFINE_DISCRETE_GPU_PREFERENCE
 
 std::shared_ptr<GUI::Scene> scenes[Global::numScene];
 
-void setupScene(sf::RenderTarget *target)
+void setupScene(sf::RenderWindow *target)
 {
     using Global::toInt;
     using Global::SceneState;
@@ -18,6 +18,7 @@ void setupScene(sf::RenderTarget *target)
     scenes[toInt(SceneState::HEAP)] = std::make_shared<GUI::HeapScene>();
     scenes[toInt(SceneState::AVL)] = std::make_shared<GUI::AVLScene>();
     scenes[toInt(SceneState::TRIE)] = std::make_shared<GUI::TrieScene>();
+    scenes[toInt(SceneState::GRAPH)] = std::make_shared<GUI::GraphScene>();
 
     for (int i = 0; i < Global::numScene; i++) {
         if (scenes[i]) {
@@ -58,7 +59,9 @@ int main()
         window.clear(sf::Color::White);
 
         curScene->loopUpdate();
+        curScene->drawZoom();
         curScene->draw(window);
+        
 
         window.display();
     }

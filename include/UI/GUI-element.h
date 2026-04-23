@@ -122,34 +122,37 @@ protected:
     sf::RectangleShape line;
     int lineThickness;
 
-    sf::Color normalColor, highlightColor;
+    sf::Color normalColor, highlightColor, specialColor;
     sf::Text text;
+    sf::RectangleShape textBg;
     
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
 
     void setupLine();
 
     bool directed = true;
+    bool isSpecial = false;
 
 public:
 
     Line(
         sf::Vector2f startPos,
         sf::Vector2f endPos,
+        bool directed = true,
         std::string text = "",
         int lineThickness = 3,
         int textSize = 20,
         int textOutlineThickness = 2,
         sf::Color lineColor = sf::Color::Black,
         sf::Color highlightColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT],
+        sf::Color specialColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
         sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
-        sf::Color textOutlineColour = sf::Color::White,
-        bool directed = true
+        sf::Color textOutlineColour = sf::Color::White
     );
     ~Line() = default;
 
-    void highlight();
-    void unhighlight();
+    void setHighlight(bool val);
+    void setSpecial(bool val);
 
     void setString(const std::string &s);
 

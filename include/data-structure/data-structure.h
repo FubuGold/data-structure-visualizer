@@ -177,15 +177,34 @@ public:
 class Graph
 {
 private:
-    std::vector<std::vector<std::pair<int,int>>> adj;
+    struct Edge // For internal adj list
+    {
+        int to, w;
+        int id;
+    };
+
+    std::vector<std::vector<Edge>> adj;
+    std::vector<Global::GraphStructure::Edge> edgeList;
+    std::vector<std::pair<bool,bool>> nodeState; // isHighlighted , isSpecial
     int n;
+
+    std::vector<Global::GraphStructure> *snapshot_ptr = nullptr;
+
+    void createSnapshot(int code,int line);
+
+    void clean();
+
 public:
     ~Graph();
 
+    void linkSnapshot(std::vector<Global::GraphStructure> *snapshot_ptr);
+    Global::GraphStructure getStructure();
+
     void setSize(int n);
     void addEdge(int x,int y,int w);
-    int findMST();
-    int findSP(int st,int ed);
+    bool checkConnectivity();
+    int prim();
+    int dijkstra(int st,int ed);
     void clear();
 };
 

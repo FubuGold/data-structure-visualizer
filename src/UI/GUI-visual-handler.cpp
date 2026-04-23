@@ -2,6 +2,8 @@
 
 #include <math.h>
 #include <fstream>
+#include <random>
+#include <chrono>
 
 namespace GUI
 {
@@ -170,29 +172,31 @@ void TreeVisualHandler::recalLine()
         if (node.second.leftCh != -1) {
             lineList.push_back(calLinePosition(node.second.getPos(),
                 nodeList[node.second.leftCh].getPos()));
-            if (node.second.isHighlighted && nodeList[node.second.leftCh].isHighlighted) {
-                lineList.back().highlight();
-            }
+
+            lineList.back().setHighlight(
+                node.second.isHighlighted && nodeList[node.second.leftCh].isHighlighted
+            );
         }
         
         if (node.second.rightCh != -1) {
             lineList.push_back(calLinePosition(node.second.getPos(),
                 nodeList[node.second.rightCh].getPos()));
-            if (node.second.isHighlighted && nodeList[node.second.rightCh].isHighlighted) {
-                lineList.back().highlight();
-            }
+            
+            lineList.back().setHighlight(
+                node.second.isHighlighted && nodeList[node.second.rightCh].isHighlighted
+            );
         }
     }
 }
 
-void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
+void TreeVisualHandler::setTreeStructure(const Global::TreeStructure &newStructure)
 {
     std::cerr << "Tree structure reset\n";
     // std::cerr << newStructure << '\n';
     this->root = newStructure.rootId;
 
     // Insert and update
-    for (std::pair<const int,std::tuple<int,int,bool>> &newNode : newStructure.structureMap) {
+    for (const std::pair<const int,std::tuple<int,int,bool>> &newNode : newStructure.structureMap) {
         TreeNode &curNode = this->nodeList[newNode.first];
         curNode.leftCh = std::get<0>(newNode.second);
         curNode.rightCh = std::get<1>(newNode.second);
@@ -203,7 +207,7 @@ void TreeVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
         
         // std::cerr << newNode.first << ' ' << newStructure.valueMap[newNode.first] << '\n';
 
-        curNode.setValue(newStructure.valueMap[newNode.first]);
+        curNode.setValue(newStructure.valueMap.at(newNode.first));
     }
 
     // Clean up
@@ -309,9 +313,11 @@ void SLLVisualHandler::recalLine()
         if (node.second.nxt != -1) {
             lineList.push_back(calLinePosition(node.second.getPos(),
                 nodeList[node.second.nxt].getPos()));
-            if (node.second.isHighlighted && nodeList[node.second.nxt].isHighlighted) {
-                lineList.back().highlight();
-            }
+
+            lineList.back().setHighlight(
+                node.second.isHighlighted && nodeList[node.second.nxt].isHighlighted
+            );
+            
         }
     }
 }
@@ -341,19 +347,19 @@ void SLLVisualHandler::recalPos()
     }
 }
 
-void SLLVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
+void SLLVisualHandler::setTreeStructure(const Global::TreeStructure &newStructure)
 {
     std::cerr << "Tree structure reset\n";
     this->root = newStructure.rootId;
 
-    for (std::pair<const int,std::tuple<int,int,bool>> &newNode : newStructure.structureMap) {
+    for (const std::pair<const int,std::tuple<int,int,bool>> &newNode : newStructure.structureMap) {
         StructNode &curNode = this->nodeList[newNode.first];
         curNode.nxt = std::get<0>(newNode.second);
         curNode.setHighlighted(std::get<2>(newNode.second));
         curNode.isHighlighted = std::get<2>(newNode.second);
         if (curNode.nxt != -1) this->nodeList[curNode.nxt].prevId = newNode.first;
 
-        curNode.setValue(newStructure.valueMap[newNode.first]);
+        curNode.setValue(newStructure.valueMap.at(newNode.first));
     }
 
     for (auto it = nodeList.begin(); it != nodeList.end();) {
@@ -531,9 +537,10 @@ void TrieVisualHandler::recalLine()
 
             lineList.push_back(calLinePosition(node.second.getPos(),
                 nodeList[chId].getPos()));
-            if (node.second.isHighlighted && nodeList[chId].isHighlighted) {
-                lineList.back().highlight();
-            }
+            
+            lineList.back().setHighlight(
+                node.second.isHighlighted && nodeList[chId].isHighlighted
+            );
 
             std::string tmp;
             tmp.push_back(char('a' + i));
@@ -542,14 +549,14 @@ void TrieVisualHandler::recalLine()
     }
 }
 
-void TrieVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
+void TrieVisualHandler::setTreeStructure(const Global::TreeStructure &newStructure)
 {
     std::cerr << "Trie - Visual: Structure reset\n";
     std::cerr << newStructure << '\n';
 
     this->root = newStructure.rootId;
 
-    for (std::pair<const int,Global::TrieChild_t> &newNode : newStructure.trieMap) {
+    for (const std::pair<const int,Global::TrieChild_t> &newNode : newStructure.trieMap) {
         TrieNode &curNode = this->nodeList[newNode.first];
         curNode.isHighlighted = std::get<0>(newNode.second);
         curNode.setHighlighted(curNode.isHighlighted);
@@ -562,7 +569,7 @@ void TrieVisualHandler::setTreeStructure(Global::TreeStructure &newStructure)
             curNode.ch[(int)ch.second - 'a'] = ch.first;
             this->nodeList[ch.first].paId = newNode.first;
         }
-        curNode.setValue(newStructure.valueMap[newNode.first]);
+        curNode.setValue(newStructure.valueMap.at(newNode.first));
     }
 
     // Clean up
@@ -619,6 +626,184 @@ void TrieVisualHandler::clear()
     curTreeHeight = 0;
 }
 
+//======================================================//
+
+// Graph visual handler implementation
+
+GraphVisualHandler::GraphVisualHandler(
+    sf::Vector2f size,
+    sf::Vector2f pos
+)
+{
+    this->size = size;
+    this->pos = pos;
+
+    this->center = size * 0.5f;
+}
+
+void GraphVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    for (int i = 0; i < lines.size(); i++) {
+        target.draw(lines[i],state);
+    }
+    for (int i = 0; i < nodes.size(); i++) {
+        target.draw(nodes[i],state);
+    }
+}
+
+float fa(float dis, float k)
+{
+    return dis * dis / k;
+}
+
+float fr(float dis, float k)
+{
+    return k * k / dis;
+}
+
+float cool(float t)
+{
+    return t * 0.95;
+}
+
+void GraphVisualHandler::simulation(float forceConst)
+{
+    // const float targetDis = 50; // px
+    const float dampening = 0.1;
+    const float widthOffset = 80, heightOffset = 60;
+
+    // Repulsion
+    for (int u = 0; u < numNode; u++) {
+        disp[u] = sf::Vector2f(0,0);
+        for (int v = 0; v < numNode; v++) {
+            if (u == v) continue;
+            sf::Vector2f delta = nodes[u].getPos() - nodes[v].getPos();
+
+            disp[u] += delta.normalized() * fr(delta.length(),forceConst);
+        }
+    }
+
+    // Attraction
+    for (Global::GraphStructure::Edge &e : baseStructure.edgeList) {
+        int u = e.x, v = e.y;
+        sf::Vector2f diff = nodes[v].getPos() - nodes[u].getPos();
+        float force = fa(diff.length(),forceConst);
+        
+        diff = diff.normalized();
+        disp[v] -= diff * force;
+        disp[u] += diff * force;
+    }
+
+    for (int i = 0; i < numNode; i++) {
+        // std::cerr << i << ' ' << disp[i].x << ' ' << disp[i].y << ' ' << disp[i].length() << '\n';
+        disp[i] *= dampening;
+        sf::Vector2f tmpPos = nodes[i].getPos();
+        tmpPos += disp[i].normalized() * std::min(disp[i].length(), temperature);
+        tmpPos.x = std::clamp(tmpPos.x, 0.f + widthOffset, size.x - widthOffset);
+        tmpPos.y = std::clamp(tmpPos.y, 0.f + heightOffset, size.y - heightOffset);
+        nodes[i].setPos(tmpPos);
+    }
+}
+
+std::mt19937 rnd(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+int rng(int l,int r)
+{
+    return std::uniform_int_distribution<int>(l,r)(rnd);
+}
+
+void GraphVisualHandler::calPos()
+{
+    // float dt = physDuration / numTicks;
+    disp.assign(numNode, {0,0});
+    int iterNum = 40;
+    float forceConst = 0.3 * sqrtf(1.f * (size.x * size.y) / nodes.size());
+    temperature = 100;
+    for (int i = 0; i < iterNum; i++) {
+        simulation(forceConst);
+    }
+    // std::cerr << forceConst << '\n';
+    std::cerr << "Simulation end\n";
+}
+
+void GraphVisualHandler::buildGraph(const Global::GraphStructure &structure)
+{
+    std::cerr << "Graph - Visual: Building graph\n";
+    numNode = structure.numNode;
+    for (int i = 0; i < numNode; i++) {
+        nodes.emplace_back(
+            sf::Vector2f{rng(0,size.x),rng(0,size.y)},std::to_string(i),nodeRadius,charSize,0,2,2,
+            Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]
+        );
+        nodes[i].setHighlighted(false);
+        nodes[i].setSpecial(false);
+    }
+    calPos();
+    for (int i = 0; i < numNode; i++) {
+        nodes[i].setPos(nodes[i].getPos() + pos);
+    } 
+    std::cerr << "Node position set\n";
+    for (Global::GraphStructure::Edge edge : structure.edgeList)
+    {
+        int u = edge.x, v = edge.y, w = edge.w;
+        lines.emplace_back(
+            nodes[u].getPos(), nodes[v].getPos(), false,
+            std::to_string(w), 2, 20
+        );
+        // lines.back().setSpecial(edge.isSpecial);
+        // lines.back().setHighlight(edge.isHighlighted);
+    }
+    std::cerr << "Edge set\n";
+    baseStructure = structure;
+    
+}
+
+bool checkSimiliarStruct(const Global::GraphStructure &struct1, const Global::GraphStructure &struct2)
+{
+    // std::cerr << "Graph - Visual: Structure check begin\n";
+    // std::cerr << struct1.edgeList.size() << ' ' << struct2.edgeList.size() << '\n';
+    // for (int i = 0; i < struct1.edgeList.size(); i++) {
+    //     std::cerr << struct1.edgeList[i].x << ' ' << struct1.edgeList[i].y << ' ' << struct1.edgeList[i].w << '\n';
+    // }
+    // std::cerr << '\n';
+    // for (int i = 0; i < struct2.edgeList.size(); i++) {
+    //     std::cerr << struct2.edgeList[i].x << ' ' << struct2.edgeList[i].y << ' ' << struct2.edgeList[i].w << '\n';
+    // }
+    if (struct1.edgeList.size() != struct2.edgeList.size()) return false;
+    // std::cerr << "Same size\n";
+    for (int i = 0; i < struct1.edgeList.size(); i++) {
+        Global::GraphStructure::Edge e1 = struct1.edgeList[i], e2 = struct2.edgeList[i];
+        if (e1.x != e2.x || e1.y != e2.y || e1.w != e2.w) {
+            std::cerr << e1.x << ' ' << e1.y << ' ' << e1.w << ' '
+                      << e2.x << ' ' << e2.y << ' ' << e2.w << '\n';
+            return false;
+        }
+    }
+    return true;
+}
+
+void GraphVisualHandler::setCurrentState(const Global::GraphStructure &newStructure)
+{
+    assert(checkSimiliarStruct(baseStructure,newStructure));
+    assert(newStructure.edgeList.size() == lines.size());
+    assert(newStructure.numNode == nodes.size());
+    for (int i = 0; i < lines.size(); i++) {
+        lines[i].setSpecial(newStructure.edgeList[i].isSpecial);
+        lines[i].setHighlight(newStructure.edgeList[i].isHighlighted);
+    }
+    for (int i = 0; i < nodes.size(); i++) {
+        nodes[i].setHighlighted(newStructure.nodeState[i].first);
+        nodes[i].setSpecial(newStructure.nodeState[i].second);
+    }
+}
+
+void GraphVisualHandler::clear()
+{
+    numNode = 0;
+    nodes.clear();
+    disp.clear();
+    lines.clear();
+    baseStructure = Global::GraphStructure();
+}
 
 //======================================================//
 
@@ -743,5 +928,111 @@ void CodeVisualHandler::setLine(int line)
     if (curLine >= 0) highlightCur();
 }
 
+//======================================================//
+
+void PopupGroup::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    if (!isEnable) return;
+    for (int i = 0; i < elements.size(); i++) {
+        target.draw(*elements[i],state);
+    }
+}
+
+void PopupGroup::handleEvent(const std::optional<sf::Event> &e) 
+{
+    if (!isEnable) return;
+    for (int i = 0; i < iElements.size(); i++) {
+        iElements[i]->handleEvent(e);
+    }
+}
+
+bool PopupGroup::containPos(sf::Vector2f pos)
+{
+    return true;
+}
+
+void PopupGroup::setWindow(sf::RenderTarget *target_ptr)
+{
+    IInteractableElement::setWindow(target_ptr);
+    for (int i = 0; i < iElements.size(); i++) {
+        iElements[i]->setWindow(target_ptr);
+    }
+}
+
+void PopupGroup::open()
+{
+    isEnable = true;
+}
+
+void PopupGroup::close()
+{
+    isEnable = false;
+}
+
+//======================================================//
+
+// Zoom view implementation
+
+ZoomView::ZoomView() {}
+
+void ZoomView::setCenter(const sf::Vector2f& center)
+{
+    view.setCenter(center);
+}
+
+void ZoomView::setSize(const sf::Vector2f& size)
+{
+    view.setSize(size);
+}
+
+void ZoomView::setWindow(sf::RenderWindow *window)
+{
+    this->window = window;
+    view = window->getDefaultView();
+}
+
+bool ZoomView::containPos(sf::Vector2f pos)
+{
+    sf::FloatRect rect(view.getCenter() - view.getSize() * 0.5f, view.getSize());
+    return rect.contains(pos);
+}
+
+void ZoomView::handleEvent(const std::optional<sf::Event>& e)
+{
+    if (const sf::Event::MouseWheelScrolled* scroll = e->getIf<sf::Event::MouseWheelScrolled>()) {
+        sf::Vector2i pixelPos = scroll->position;
+        std::cerr << "Scroll event registered\n";
+        if (!containPos(sf::Vector2f(pixelPos))) return;
+        std::cerr << "Position in\n";
+        sf::Vector2f beforeZoom = window->mapPixelToCoords(pixelPos, view);
+        if (scroll->delta > 0)
+            view.zoom(1.f / zoomFactor);
+        else
+            view.zoom(zoomFactor);
+
+        sf::Vector2f afterZoom = window->mapPixelToCoords(pixelPos, view);
+        view.move(beforeZoom - afterZoom);
+    }
+    else if (const sf::Event::MouseButtonPressed* pressed = e->getIf<sf::Event::MouseButtonPressed>()) {
+        if (!containPos(sf::Vector2f(pressed->position))) return;
+        if (pressed->button == sf::Mouse::Button::Middle) {
+            dragging = true;
+            lastMousePos = pressed->position;
+        }
+    }
+    else if (const sf::Event::MouseButtonReleased* released = e->getIf<sf::Event::MouseButtonReleased>()) {
+        // if (!containPos(sf::Vector2f(released->position))) return;
+        if (released->button == sf::Mouse::Button::Middle) {
+            dragging = false;
+        }
+    }
+    else if (const sf::Event::MouseMoved* moved = e->getIf<sf::Event::MouseMoved>()) {
+        if (!dragging) return;
+        sf::Vector2i currentPos = moved->position;
+        sf::Vector2f delta = window->mapPixelToCoords(lastMousePos, view) - window->mapPixelToCoords(currentPos, view);
+        view.move(delta);
+        lastMousePos = currentPos;
+    }
+}
 
 }

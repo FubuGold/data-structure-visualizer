@@ -20,24 +20,29 @@ class Scene
 protected:
     std::vector<std::shared_ptr<sf::Drawable>> elements;
     std::vector<std::shared_ptr<IInteractableElement>> interactableElements;
+    std::vector<std::shared_ptr<sf::Drawable>> zoomElements;
 
     template<typename T>
     requires std::derived_from<T,sf::Drawable>
     void addElement(std::shared_ptr<T> element_ptr);
 
-    sf::RenderTarget *target_ptr;
+    void addZoomElement(std::shared_ptr<sf::Drawable> element_ptr);
+
+    sf::RenderWindow *target_ptr;
+    GUI::ZoomView zoomView; // For visual scenes
     
 public:
     
     void handleEvent(const std::optional<sf::Event>& e);
     
     virtual void setup();
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default);
+    virtual void draw(sf::RenderWindow& target, sf::RenderStates state = sf::RenderStates::Default);
+    void drawZoom();
 
     virtual void loopUpdate() {}
     virtual void clear() {}
 
-    void setWindow(sf::RenderTarget *target_ptr);
+    void setWindow(sf::RenderWindow *target_ptr);
 };
 
 //======================================================//
@@ -156,6 +161,23 @@ public:
 
     void setup() override;
     void loopUpdate() override;
+};
+
+//======================================================//
+
+class GraphScene : public Scene
+{
+protected:
+
+    Handler::GraphHandler handler;
+    std::shared_ptr<GraphVisualHandler> graphVisual;
+    std::shared_ptr<GUI::MultilineTextField> graphInputField;
+
+public:
+
+    void setup() override;
+    void loopUpdate() override;
+
 };
 
 }

@@ -62,6 +62,7 @@ RectangleButton::RectangleButton(
     sf::Color borderColor
   ) : text(Global::textFont)
 {
+    this->baseColor = bgColor;
     this->rect.setSize(btnSize);
 
     this->rect.setPosition(btnPos);
@@ -108,6 +109,18 @@ void RectangleButton::setString(const std::string &s)
 
     this->text.setOrigin(this->text.getLocalBounds().position + this->text.getLocalBounds().size * 0.5f);
     this->text.setPosition(this->rect.getGlobalBounds().position + this->rect.getLocalBounds().size * 0.5f);
+}
+
+void RectangleButton::lock()
+{
+    IInteractableElement::lock();
+    this->rect.setFillColor(disableColor);
+}
+
+void RectangleButton::unlock()
+{
+    IInteractableElement::unlock();
+    this->rect.setFillColor(baseColor);
 }
 
 //======================================================//
@@ -164,6 +177,7 @@ TextInputField::TextInputField(
     sf::Color borderColor
 ) : value(""), focused(0), text(Global::numberFont)
 {
+    this->baseColor = bgColor;
     this->rect.setSize(fieldSize);
 
     this->rect.setPosition(fieldPos);
@@ -233,6 +247,18 @@ void TextInputField::handleEvent(const std::optional<sf::Event>& e)
     }
 }
 
+void TextInputField::lock()
+{
+    IInteractableElement::lock();
+    this->rect.setFillColor(disableColor);
+}
+
+void TextInputField::unlock()
+{
+    IInteractableElement::unlock();
+    this->rect.setFillColor(baseColor);
+}
+
 //======================================================//
 
 // Horizontal slider implemenentation
@@ -294,7 +320,7 @@ void HSlider::updateValue(int segment)
     this->curValue = this->startValue + this->valueStep * segment;
     this->progressRect.setSize({this->size.x * segment / numSteps,this->size.y});
 
-    if (changeCallback) changeCallback(this->curValue);
+    // if (changeCallback) changeCallback(this->curValue);
 }
 
 bool HSlider::containPos(sf::Vector2f pos)
@@ -312,6 +338,7 @@ void HSlider::handleEvent(const std::optional<sf::Event>& e)
         else this->hoverOut();
         if (this->clicked) {
             this->updateValue(this->findSegment(mousePos));
+            if (changeCallback) changeCallback(this->curValue);
         }
     }
     else if (const sf::Event::MouseButtonPressed *mousePressed = e->getIf<sf::Event::MouseButtonPressed>()) {
@@ -349,7 +376,7 @@ void HSlider::setValue(float val)
     
     this->curValue = this->startValue + this->valueStep * curStep;
     this->progressRect.setSize({this->size.x * curStep / numSteps,this->size.y});
-    if (changeCallback) changeCallback(this->curValue);
+    // if (changeCallback) changeCallback(this->curValue);
 }
 
 void HSlider::setNewRange(float startValue, float endValue, int numSteps)
@@ -359,6 +386,206 @@ void HSlider::setNewRange(float startValue, float endValue, int numSteps)
     this->endValue = endValue;
 
     this->valueStep = (endValue - startValue) / numSteps;
+}
+
+//======================================================//
+
+// Multi-line text field implementation
+
+MultilineTextField::MultilineTextField(
+    sf::Vector2f size,
+    sf::Vector2f pos,
+    const sf::Font& font, 
+    unsigned int charSize
+) : textTemplate(font)
+{
+    textTemplate.setFont(font);
+    textTemplate.setCharacterSize(charSize);
+    textTemplate.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+
+    lineHeight = textTemplate.getCharacterSize() * 1.3f;
+
+    box.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
+    box.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    box.setOutlineThickness(1.f);
+    box.setSize(size);
+    box.setPosition(pos);
+
+    caretShape.setSize({1.f,lineHeight});
+    caretShape.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+}
+
+std::vector<std::string> MultilineTextField::splitLines() const
+{
+    std::vector<std::string> lines;
+    std::string current;
+
+    for (char c : content) {
+        if (c == '\n') {
+            lines.push_back(current);
+            current.clear();
+        }
+        else {
+            current.push_back(c);
+        }
+    }
+
+    lines.push_back(current);
+    return lines;
+}
+
+sf::Vector2f MultilineTextField::getCaretPixelPos() const
+{
+    std::vector<std::string> lines = splitLines();
+
+    size_t index = caretIndex;
+    size_t row = 0;
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        if (index <= lines[i].size()) {
+            row = i;
+            break;
+        }
+        index -= (lines[i].size() + 1);
+    }
+
+    size_t col = index;
+
+    sf::Text temp = textTemplate;
+    temp.setString(lines[row].substr(0, col));
+
+    float x = temp.getLocalBounds().size.x;
+    float y = row * lineHeight;
+    
+    return {x, y};
+}
+
+void MultilineTextField::updateScroll()
+{
+    sf::Vector2f caret = getCaretPixelPos();
+
+    float visibleW = box.getSize().x - 2 * padding;
+    float visibleH = box.getSize().y - 2 * padding;
+
+    // Horizontal
+    if (caret.x - scrollX > visibleW)
+        scrollX = caret.x - visibleW;
+    else if (caret.x - scrollX < 0)
+        scrollX = caret.x;
+
+    // Vertical
+    if (caret.y - scrollY > visibleH - lineHeight)
+        scrollY = caret.y - (visibleH - lineHeight);
+    else if (caret.y - scrollY < 0)
+        scrollY = caret.y;
+
+    caretShape.setPosition({
+        box.getPosition().x + padding + caret.x - scrollX + 1,
+        box.getPosition().y + padding + caret.y - scrollY
+    });
+}
+
+void MultilineTextField::draw(sf::RenderTarget& target, sf::RenderStates states) const
+{
+    target.draw(box, states);
+
+    sf::View oldView = target.getView();
+
+    sf::FloatRect viewport(
+        {box.getPosition().x / target.getSize().x, box.getPosition().y / target.getSize().y},
+        {box.getSize().x / target.getSize().x, box.getSize().y / target.getSize().y}
+    );
+
+    sf::View clipView = oldView;
+    clipView.setScissor(viewport);
+    target.setView(clipView);
+
+    std::vector<std::string> lines = splitLines();
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        sf::Text line = textTemplate;
+        line.setString(lines[i]);
+
+        line.setPosition({
+            box.getPosition().x + padding - scrollX,
+            box.getPosition().y + padding + i * lineHeight - scrollY
+        });
+
+        target.draw(line, states);
+    }
+
+    // caret
+    if (focused && showCaret) {
+        target.draw(caretShape, states);
+    }
+
+    target.setView(oldView);
+}
+
+bool MultilineTextField::containPos(sf::Vector2f pos)
+{
+    return box.getGlobalBounds().contains(pos);
+}
+
+void MultilineTextField::handleEvent(const std::optional<sf::Event>& e)
+{
+    if (locked) return;
+
+    if (const auto* pressed = e->getIf<sf::Event::MouseButtonPressed>()) {
+        sf::Vector2f mouse = target_ptr->mapPixelToCoords(pressed->position);
+        focused = containPos(mouse);
+    }
+
+    if (!focused) return;
+
+    if (const auto* textEntered = e->getIf<sf::Event::TextEntered>()) {
+        if (textEntered->unicode == 13) // Enter
+        {
+            content.insert(caretIndex, "\n");
+            caretIndex++;
+        }
+        else if (this->filter && this->filter(textEntered->unicode))
+        {
+            content.insert(content.begin() + caretIndex, (char)textEntered->unicode);
+            caretIndex++;
+        }
+    }
+    else if (const auto* key = e->getIf<sf::Event::KeyPressed>()) {
+        if (key->code == sf::Keyboard::Key::Backspace && caretIndex > 0) {
+            content.erase(caretIndex - 1, 1);
+            caretIndex--;
+        }
+        else if (key->code == sf::Keyboard::Key::Left && caretIndex > 0)
+            caretIndex--;
+        else if (key->code == sf::Keyboard::Key::Right && caretIndex < content.size())
+            caretIndex++;
+        else if (key->code == sf::Keyboard::Key::Up)
+            caretIndex = std::max((int)caretIndex - 10, 0); 
+        else if (key->code == sf::Keyboard::Key::Down)
+            caretIndex = std::min((int)content.size(), (int)caretIndex + 10);
+    }
+
+    updateScroll();
+}
+
+void MultilineTextField::update()
+{
+    if (!focused) return;
+
+    if (caretClock.getElapsedTime().asSeconds() > 0.5f) {
+        showCaret = !showCaret;
+        caretClock.restart();
+    }
+}
+
+void MultilineTextField::setFilter(inputFieldFilterCb_t filter)
+{
+    this->filter = filter;
+}
+
+std::string MultilineTextField::getValue()
+{
+    return content;
 }
 
 }

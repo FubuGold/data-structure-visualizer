@@ -5,6 +5,7 @@
 #include <chrono> // For seeding seed
 #include <random> // For random
 #include <fstream> // For file reading
+#include <sstream>
 
 std::mt19937 rndGen(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
@@ -77,6 +78,13 @@ void AVLTreeHandler::setVisualizer(std::shared_ptr<GUI::TreeVisualHandler> visua
 void AVLTreeHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
 {
     this->animationSlider = animationSlider_p;
+    addLockableElement(animationSlider);
+    animationSlider->setChangeCb([this](float val){
+        int id = val;
+        curSnapshot = id;
+        setSnapshot(id);
+        visualizer->endAnimation();
+    });
 }
 void AVLTreeHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
 {
@@ -306,6 +314,13 @@ void HeapHandler::setVisualizer(std::shared_ptr<GUI::TreeVisualHandler> visualiz
 void HeapHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
 {
     this->animationSlider = animationSlider_p;
+    addLockableElement(animationSlider);
+    animationSlider->setChangeCb([this](float val){
+        int id = val;
+        curSnapshot = id;
+        setSnapshot(id);
+        visualizer->endAnimation();
+    });
 }
 void HeapHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
 {
@@ -524,6 +539,13 @@ void SLLHandler::setVisualizer(std::shared_ptr<GUI::SLLVisualHandler> visualizer
 void SLLHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
 {
     this->animationSlider = animationSlider_p;
+    addLockableElement(animationSlider);
+    animationSlider->setChangeCb([this](float val){
+        int id = val;
+        curSnapshot = id;
+        setSnapshot(id);
+        visualizer->endAnimation();
+    });
 }
 void SLLHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
 {
@@ -747,6 +769,13 @@ void TrieHandler::setVisualizer(std::shared_ptr<GUI::TrieVisualHandler> visualiz
 void TrieHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
 {
     this->animationSlider = animationSlider_p;
+    addLockableElement(animationSlider);
+    animationSlider->setChangeCb([this](float val){
+        int id = val;
+        curSnapshot = id;
+        setSnapshot(id);
+        visualizer->endAnimation();
+    });
 }
 void TrieHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
 {
@@ -912,6 +941,251 @@ void TrieHandler::file()
 
     postprocessing();
     // endAnimation();
+}
+
+//======================================================//
+
+GraphHandler::GraphHandler()
+{
+    graph.linkSnapshot(&snapshot);
+}
+
+void GraphHandler::preprocessing()
+{
+    GraphHandler::endAnimation();
+    snapshot.clear();
+    animationLock = 1;
+    // std::cerr << "Done preprocessing\n";
+}
+
+void GraphHandler::postprocessing()
+{
+    std::cerr << "Graph - Handler: Post processing began\n";
+    curSnapshot = 0;
+    delaying = false;
+    lockElement();
+    // std::cerr << "Post processing\n";
+
+    std::cerr << "Graph - Handler - Post processing: Locked element\n";
+
+    if (snapshot.size()) {
+        setSnapshot(0);
+    }
+
+    animationSlider->setNewRange(0, std::max(0,(int)snapshot.size()-1), std::max(0,(int)snapshot.size()-1));
+    animationSlider->setValue(0);
+
+    std::cerr << "Graph - Handler: Post processing completed\n";
+}
+
+void GraphHandler::lockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        // std::cerr << lockableElement[i] << '\n';
+        lockableElement[i]->lock();
+    }
+}
+
+void GraphHandler::unlockElement()
+{
+    for (int i = 0; i < lockableElement.size(); i++) {
+        lockableElement[i]->unlock();
+    }
+}
+
+void GraphHandler::setSnapshot(int id)
+{
+    if (id >= snapshot.size()) return;
+    std::cerr << "Setting snapshot: " << id << ' ' << snapshot[id].codeFunc << ' ' << snapshot[id].codeLine << '\n';
+    visualizer->setCurrentState(snapshot[id]);
+    animationSlider->setValue(id);
+    codeVisualizer->setFunc(snapshot[id].codeFunc);
+    codeVisualizer->setLine(snapshot[id].codeLine);
+}
+
+void GraphHandler::setVisualizer(std::shared_ptr<GUI::GraphVisualHandler> visualizer_p)
+{
+    this->visualizer = visualizer_p;
+}
+void GraphHandler::setAnimationSlider(std::shared_ptr<GUI::HSlider> animationSlider_p)
+{
+    this->animationSlider = animationSlider_p;
+    addLockableElement(animationSlider);
+    animationSlider->setChangeCb([this](float val){
+        int id = val;
+        curSnapshot = id;
+        setSnapshot(id);
+    });
+}
+void GraphHandler::setCodeVisualizer(std::shared_ptr<GUI::CodeVisualHandler> codeVisualizer_p)
+{
+    this->codeVisualizer = codeVisualizer_p;
+}
+
+void GraphHandler::addLockableElement(std::shared_ptr<GUI::IInteractableElement> element)
+{
+    this->lockableElement.push_back(element);
+}
+
+void GraphHandler::loop()
+{
+    if (!animationLock) return;
+
+    if (delayClock.getElapsedTime().asSeconds() * Global::animationSpeed <= DELAY_TIME) return;
+    if (curSnapshot >= (int)snapshot.size() - 1) {
+        if (animationLock) {
+            animationLock = 0;
+            unlockElement();
+        }
+        return;
+    }
+    curSnapshot++;
+    setSnapshot(curSnapshot);
+    delayClock.restart();
+
+}
+
+void GraphHandler::endAnimation()
+{
+    // std::cerr << "End animation called\n";
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot.back());
+        setSnapshot(snapshot.size()-1);
+        // visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = std::max(0,(int)snapshot.size() - 1);
+    animationLock = 0;
+    // std::cerr << "After if " << curSnapshot << '\n';
+    // std::cerr << "animationSlider" << '\n';
+    animationSlider->setValue(curSnapshot);
+    
+    unlockElement();
+}
+
+void GraphHandler::fullUndo()
+{
+    if (snapshot.size() != 0) {
+        // visualizer->setTreeStructure(snapshot[0]);
+        setSnapshot(0);
+        // visualizer->endAnimation();
+    }
+    else {
+        codeVisualizer->setFunc(-1);
+    }
+    curSnapshot = 0;
+    animationLock = 0;
+    // animationSlider->setValue(curSnapshot); 
+}
+
+void GraphHandler::undo()
+{
+    if (curSnapshot > 0) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        // visualizer->endAnimation();
+        curSnapshot--;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void GraphHandler::redo()
+{
+    if (curSnapshot < (int)snapshot.size()-1) {
+        // std::cerr << curSnapshot << ' ' << snapshot.size() << '\n';
+        // visualizer->endAnimation();
+        curSnapshot++;
+        setSnapshot(curSnapshot);
+    }
+}
+
+void GraphHandler::buildGraph(const std::string &text)
+{
+    std::stringstream ss;
+    ss << text;
+    if (!Validator::graphValidator(ss)) return;
+    clear();
+    ss.clear();
+    // graph.clear();
+    // visualizer->clear();
+    ss << text;
+    int n,m; ss >> n >> m;
+    graph.setSize(n);
+    for (int i = 0; i < m; i++) {
+        int x,y,w; ss >> x >> y >> w;
+        graph.addEdge(x,y,w);
+    }
+    visualizer->buildGraph(graph.getStructure());
+}
+
+void GraphHandler::dijkstra(int st,int ed)
+{
+    preprocessing();
+    graph.dijkstra(st,ed);
+    postprocessing();
+}
+
+void GraphHandler::prim()
+{
+    preprocessing();
+    graph.prim();
+    postprocessing();
+}
+
+void GraphHandler::random()
+{
+    clear();
+    std::cerr << "Random called\n";
+    int n = rng(1,MAX_N);
+    graph.setSize(n);
+    std::vector<std::pair<int,int>> edgeVec;
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            edgeVec.emplace_back(i,j);
+        }
+    }
+    int m = rng(0, edgeVec.size());
+    std::random_shuffle(edgeVec.begin(),edgeVec.end());
+    for (int i = 0; i < m; i++) {
+        graph.addEdge(
+            edgeVec[i].first,edgeVec[i].second,rng(VALUE_MIN,VALUE_MAX)
+        );
+    }
+    visualizer->buildGraph(graph.getStructure());
+    // postprocessing();
+    std::cerr << "Random ended\n";
+    snapshot.clear();
+}
+
+void GraphHandler::clear()
+{
+    graph.clear();
+    visualizer->clear();
+    snapshot.clear();
+}
+
+void GraphHandler::file()
+{
+    clear();
+    std::string filename = Global::openFile();
+    if (filename == "") return;
+    if (!Validator::graphValidator(filename)) {
+        std::cerr << "Invalid file\n";
+        return;
+    }
+    std::ifstream inp(filename);
+    graph.clear();
+    visualizer->clear();
+    int n,m; inp >> n >> m;
+    // std::cerr << n << ' ' << m << '\n';
+    graph.setSize(n);
+    for (int i = 0; i < m; i++) {
+        int x,y,w; inp >> x >> y >> w;
+        // std::cerr << x << ' ' << y << ' ' << w << '\n';
+        graph.addEdge(x,y,w);
+    }
+    visualizer->buildGraph(graph.getStructure());
 }
 
 }

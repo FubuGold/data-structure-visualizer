@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <stack>
+#include <set>
 #include <iostream> // For debug
 
 using Global::toInt;
@@ -846,77 +847,201 @@ Graph::~Graph()
     this->clear();
 }
 
+void Graph::linkSnapshot(std::vector<Global::GraphStructure> *snapshot_ptr)
+{
+    this->snapshot_ptr = snapshot_ptr;
+}
+
+void Graph::createSnapshot(int code, int line)
+{
+    snapshot_ptr->emplace_back();
+    Global::GraphStructure &cur = snapshot_ptr->back();
+    cur.codeFunc = code;
+    cur.codeLine = line;
+    cur.numNode = n;
+    cur.nodeState = nodeState;
+    cur.edgeList = edgeList;
+}
+
 void Graph::setSize(int n)
 {
     this->n = n;
-    adj.assign(n,std::vector<std::pair<int,int>>());
+    adj.assign(n,std::vector<Edge>());
+    nodeState.assign(n,std::pair<bool,bool>(0,0));
 }
 
 void Graph::addEdge(int x,int y,int w)
 {
-    adj[x].push_back({y,w});
-    adj[y].push_back({x,w});
+    if (x >= n || y >= n) return;
+    int id = edgeList.size();
+    edgeList.emplace_back(x,y,w,0,0);
+    adj[x].push_back({y,w,id});
+    adj[y].push_back({x,w,id});
 }
 
-int Graph::findMST()
+Global::GraphStructure Graph::getStructure()
 {
-    if (this->n == 0) return -1;
-    
-    std::priority_queue<std::pair<int,int>> pq;
-    std::vector<bool> vst(this->n);
+    clean();
+    createSnapshot(0,-1);
+    return snapshot_ptr->at(0);
+}
 
-    pq.push({0,0});
-    vst[0] = 1;
-    int cnt = 1, res = 0;
-
-    while (pq.size()) {
-        int u = pq.top().second;
-        int curW = -pq.top().first; 
-        pq.pop();
-        if (vst[u]) continue;
+bool Graph::checkConnectivity()
+{
+    std::queue<int> qu;
+    std::vector<bool> vst(n);
+    qu.push(0);
+    int cnt = 0;
+    while (qu.size()) {
+        int u = qu.front();
+        qu.pop();
         cnt++;
         vst[u] = 1;
-        res += curW;
-        if (cnt == this->n) break;
-        for (std::pair<int,int> &edge : adj[u])
-        {
-            int &v = edge.first, &w = edge.second;
-            if (vst[v]) continue;
-            pq.push({-w,v});
+        for (Edge &e : adj[u]) {
+            int v = e.to;
+            if (!vst[v]) {
+                vst[v] = 1;
+                qu.push(v);
+            }
         }
     }
+    assert(cnt <= n);
+    return cnt == n;
+}
 
+void Graph::clean()
+{
+    nodeState.assign(n,{0,0});
+    for (int i = 0; i < edgeList.size(); i++) {
+        edgeList[i].isHighlighted = 0;
+        edgeList[i].isSpecial = 0;
+    }
+}
+
+int Graph::prim()
+{
+    if (this->n == 0) return -1;
+    clean();
+    // if (!checkConnectivity()) return -1;
+    
+    std::priority_queue<std::pair<int,std::pair<int,int>>> pq;
+    std::vector<bool> vst(this->n);
+    nodeState.assign(n,std::pair<bool,bool>(0,0));
+
+    pq.push({0,{0,-1}});
+    // vst[0] = 1;
+    createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 0);
+    
+    int cnt = 0, res = 0;
+    createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 1);
+    
+    while (pq.size()) {
+        int u = pq.top().second.first;
+        int curW = -pq.top().first;
+        int preEdge = pq.top().second.second;
+        nodeState[u].first = 1;
+        createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 3);
+        pq.pop();
+        createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 4);
+        createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 5);
+        if (!vst[u]) {
+            nodeState[u].second = 1;
+            res += curW;
+            cnt++;
+            if (preEdge != -1) edgeList[preEdge].isSpecial = 1;
+            createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 6);
+        }
+        createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 7);
+        if (cnt == this->n) break;
+        createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 8);
+        vst[u] = 1;
+        for (Edge &edge : adj[u]) {
+            int &v = edge.to, &w = edge.w;
+            edgeList[edge.id].isHighlighted = true;
+            createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 10);
+            createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 11);
+            if (!vst[v]) pq.push({-w,{v,edge.id}});
+            edgeList[edge.id].isHighlighted = false;
+        }
+        nodeState[u].first = 0;
+    }
+    
+    createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 12);
+    if (cnt < n) return -1;
+    createSnapshot(toInt(Global::GRAPH_FUNC::PRIM), 13);
     return res;
 }
 
-int Graph::findSP(int st,int ed)
+int Graph::dijkstra(int st,int ed)
 {
     if (this->n == 0) return -1;
     if (st >= this->n || ed >= this->n) return -1;
+    clean();
     
     std::priority_queue<std::pair<int,int>> pq;
-    std::vector<int> dis(this->n,-1);
+    std::vector<int> dis(this->n,INT_MAX), preEdge(this->n, -1);
+    // nodeState.assign(n,std::pair<bool,bool>(0,0));
 
     pq.push({0,st});
     dis[st] = 0;
-    int cnt = 1, res = 0;
 
+    createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),0);
+    
     while (pq.size()) {
         int u = pq.top().second;
         int curDis = -pq.top().first; 
+        nodeState[u].first = 1;
+        createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),2);
         pq.pop();
-        if (u == ed) return dis[ed];
-        if (dis[u] != -1) continue;
-        cnt++;
-        if (cnt == n) break;
-        for (std::pair<int,int> &edge : adj[u])
-        {
-            int &v = edge.first, &w = edge.second;
-            if (dis[v] != -1) continue;
-            dis[v] = curDis + w;
-            pq.push({-dis[v],v});
+        createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),3);
+
+        createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),4);
+        if (u == ed) {
+            nodeState[ed].second = 1;
+            int cur = ed;
+            while (cur != st) {
+                if (preEdge[cur] == -1) break;
+                int id = preEdge[cur];
+                edgeList[id].isSpecial = 1;
+                if (edgeList[id].x == cur) cur = edgeList[id].y;
+                else cur = edgeList[id].x;
+            }
+            createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),4);
+            return dis[ed];
         }
+
+        createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),5);
+        if (dis[u] < curDis) {
+            nodeState[u].first = 0;
+            continue;
+        }
+
+        nodeState[u].second = 1;
+        createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),5);
+        for (Edge &edge : adj[u])
+        {
+            int &v = edge.to, &w = edge.w;
+            nodeState[v].first = 1;
+            edgeList[edge.id].isHighlighted = 1;
+            createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),7);
+            createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),8);
+            if (dis[v] < curDis + w) {
+                nodeState[v].first = 0;
+                edgeList[edge.id].isHighlighted = 0;
+                continue;
+            }
+            dis[v] = curDis + w;
+            preEdge[v] = edge.id;
+            pq.push({-dis[v],v});
+            createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),9);
+            createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),10);
+            edgeList[edge.id].isHighlighted = 0;
+            nodeState[v].first = 0;
+        }
+        nodeState[u].first = 0;
     }
+    
+    createSnapshot(toInt(Global::GRAPH_FUNC::DIJKSTRA),11);
     return -1;
 }
 
@@ -924,6 +1049,8 @@ void Graph::clear()
 {
     this->n = 0;
     adj.clear();
+    nodeState.clear();
+    edgeList.clear();
 }
 
 }

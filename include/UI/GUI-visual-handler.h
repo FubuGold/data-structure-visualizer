@@ -99,7 +99,7 @@ public:
     TreeVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
     ~TreeVisualHandler();
 
-    void setTreeStructure(Global::TreeStructure &newStructure);
+    void setTreeStructure(const Global::TreeStructure &newStructure);
 
     void updateAnimation();
 
@@ -172,7 +172,7 @@ public:
     SLLVisualHandler(sf::Vector2f size, sf::Vector2f pos, int yLine = 80, int startX = 51,int stepX = 51);
     ~SLLVisualHandler();
 
-    void setTreeStructure(Global::TreeStructure &newStructure);
+    void setTreeStructure(const Global::TreeStructure &newStructure);
 
     void updateAnimation();
 
@@ -206,7 +206,7 @@ protected:
     {
     public:
         using Line::Line;
-        TrieEdge() : Line({0,0},{0,0},"",2,15) {};
+        TrieEdge() : Line({0,0},{0,0},true,"",2,15) {};
         int fromId = -1, toId = -1;
     };
 
@@ -249,7 +249,7 @@ public:
     TrieVisualHandler(sf::Vector2f size, sf::Vector2f pos, int stepY = 80, int startY = 51);
     ~TrieVisualHandler();
 
-    void setTreeStructure(Global::TreeStructure &newStructure);
+    void setTreeStructure(const Global::TreeStructure &newStructure);
 
     void updateAnimation();
 
@@ -259,6 +259,44 @@ public:
 
     void clear();
 
+};
+
+//======================================================//
+
+class GraphVisualHandler : public sf::Drawable, public sf::Transformable
+{
+protected:
+    static constexpr float nodeRadius = 15;
+    static constexpr float charSize = 15;
+
+    sf::Vector2f pos, size;
+    sf::Vector2f center;
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+    int numNode;
+    std::vector<Node> nodes;
+    std::vector<sf::Vector2f> disp;
+    std::vector<Line> lines;
+
+    Global::GraphStructure baseStructure;
+
+    // const float physDuration = 20; // seconds
+    float temperature = 100;
+
+    // The position is relative to the handler.
+    // The actual position should be recalculated by other function.
+    void simulation(float forceConst);
+    void calPos();
+
+public:
+
+    GraphVisualHandler(sf::Vector2f size, sf::Vector2f pos);
+
+    void buildGraph(const Global::GraphStructure &structure);
+
+    void setCurrentState(const Global::GraphStructure &newStructure);
+
+    void clear();
 };
 
 //======================================================//
@@ -307,6 +345,73 @@ public:
 
 };
 
+//======================================================//
+
+/**
+ * @brief This is a container that help handle a set of elements. This do not have a bounding box
+ * 
+ */
+class PopupGroup : public IInteractableElement
+{
+protected:
+
+    std::vector<std::shared_ptr<sf::Drawable>> elements;
+    std::vector<std::shared_ptr<IInteractableElement>> iElements;
+
+    bool isEnable = false;
+
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+public:
+
+    void handleEvent(const std::optional<sf::Event> &e) override;
+    bool containPos(sf::Vector2f pos) override;
+
+    template<typename T>
+    requires std::derived_from<T,sf::Drawable>
+    void addElement(std::shared_ptr<T> element_ptr);
+    void setWindow(sf::RenderTarget *target_ptr) override;
+
+    void open();
+    void close();
+
+};
+
+//======================================================//
+
+/**
+ * @brief Zoom view wrapper for elements. This will not store the element but will wrap the draw function
+ * 
+ */
+class ZoomView : public IInteractableElement
+{
+private:
+    sf::View view;
+    sf::RenderWindow *window;
+
+    float zoomFactor = 1.1f;
+    bool dragging = false;
+    sf::Vector2i lastMousePos;
+
+public:
+    ZoomView();
+
+    void setCenter(const sf::Vector2f& center);
+    void setSize(const sf::Vector2f& size);
+    void setWindow(sf::RenderWindow *window);
+
+    void handleEvent(const std::optional<sf::Event>& event);
+    bool containPos(sf::Vector2f pos) override;
+
+    template <typename T = sf::Drawable>
+    requires std::derived_from<T,sf::Drawable>
+    void draw(const T& element);
+
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override {};
+};
+
 }
+
+#include "GUI-visual-handler.ipp"
 
 #endif // GUI_VISUAL_HANDLER
