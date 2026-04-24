@@ -401,18 +401,18 @@ MultilineTextField::MultilineTextField(
 {
     textTemplate.setFont(font);
     textTemplate.setCharacterSize(charSize);
-    textTemplate.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    textTemplate.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]);
 
     lineHeight = textTemplate.getCharacterSize() * 1.3f;
 
     box.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND]);
-    box.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    box.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]);
     box.setOutlineThickness(1.f);
     box.setSize(size);
     box.setPosition(pos);
 
     caretShape.setSize({1.f,lineHeight});
-    caretShape.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    caretShape.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]);
 }
 
 std::vector<std::string> MultilineTextField::splitLines() const

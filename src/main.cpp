@@ -30,9 +30,9 @@ void setupScene(sf::RenderWindow *target)
 
 int main()
 {
-    avlTest();
-    heapTest();
-    sllTest();
+    // avlTest();
+    // heapTest();
+    // sllTest();
     std::cerr << "======================================================" << '\n';
     sf::RenderWindow window(sf::VideoMode({1280, 800}), "Data structure visualizer", sf::State::Windowed);
     

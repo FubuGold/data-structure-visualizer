@@ -390,8 +390,10 @@ private:
     sf::RenderWindow *window;
 
     float zoomFactor = 1.1f;
+    float zoomLevel = 1.f;
     bool dragging = false;
     sf::Vector2i lastMousePos;
+    sf::Vector2f center;
 
 public:
     ZoomView();
@@ -400,12 +402,14 @@ public:
     void setSize(const sf::Vector2f& size);
     void setWindow(sf::RenderWindow *window);
 
-    void handleEvent(const std::optional<sf::Event>& event);
     bool containPos(sf::Vector2f pos) override;
+    void handleEvent(const std::optional<sf::Event>& event);
 
     template <typename T = sf::Drawable>
     requires std::derived_from<T,sf::Drawable>
     void draw(const T& element);
+
+    void resetView();
 
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override {};
 };

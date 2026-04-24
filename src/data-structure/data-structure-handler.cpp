@@ -178,7 +178,10 @@ void AVLTreeHandler::file()
 {
     std::string filename = Global::openFile();
     if (filename == "") return;
-    if (!Validator::avlValidator(filename)) return;
+    if (!Validator::avlValidator(filename)) {
+        Global::invalidFormat();
+        return;
+    }
     
     clear();
 
@@ -461,7 +464,10 @@ void HeapHandler::file()
 {
     std::string filename = Global::openFile();
     if (filename == "") return;
-    if (!Validator::heapValidator(filename)) return;
+    if (!Validator::heapValidator(filename)) {
+        Global::invalidFormat();
+        return;
+    }
     
     clear();
 
@@ -684,7 +690,10 @@ void SLLHandler::file()
 {
     std::string filename = Global::openFile();
     if (filename == "") return;
-    if (!Validator::sllValidator(filename)) return;
+    if (!Validator::sllValidator(filename)) {
+        Global::invalidFormat();
+        return;
+    }
     
     clear();
 
@@ -926,7 +935,10 @@ void TrieHandler::file()
 {
     std::string filename = Global::openFile();
     if (filename == "") return;
-    if (!Validator::trieValidator(filename)) return;
+    if (!Validator::trieValidator(filename)) {
+        Global::invalidFormat();
+        return;
+    }
     
     clear();
 
@@ -1171,9 +1183,10 @@ void GraphHandler::file()
     std::string filename = Global::openFile();
     if (filename == "") return;
     if (!Validator::graphValidator(filename)) {
-        std::cerr << "Invalid file\n";
+        Global::invalidFormat();
         return;
     }
+    
     std::ifstream inp(filename);
     graph.clear();
     visualizer->clear();

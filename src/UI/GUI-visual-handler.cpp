@@ -833,13 +833,13 @@ CodeVisualHandler::CodeVisualHandler(
         {110,29}, {pos.x + lineSize.x - 110, pos.y - 29},
         "", 22, 0, 1,
         Global::colorSet[0][Global::COLOR_TYPE::BACKGROUND],
-        Global::colorSet[0][Global::COLOR_TYPE::MAIN],
-        Global::colorSet[0][Global::COLOR_TYPE::NETURAL]
+        Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL],
+        Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]
     );
 
     this->bg.setPosition(pos);
     this->bg.setOutlineThickness(1);
-    this->bg.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+    this->bg.setOutlineColor(Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]);
 }
 
 void CodeVisualHandler::draw(sf::RenderTarget& target, sf::RenderStates state) const
@@ -881,7 +881,7 @@ void CodeVisualHandler::generateVisual()
         codeBg.push_back(rect);
 
         sf::Text text(Global::codeFont);
-        text.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NETURAL]);
+        text.setFillColor(Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL]);
         text.setCharacterSize(charSize);
         text.setString(codes[curFunc][i]);
         text.setOrigin({0, text.getLocalBounds().position.y + text.getLocalBounds().size.y * 0.5f});
@@ -978,6 +978,7 @@ ZoomView::ZoomView() {}
 void ZoomView::setCenter(const sf::Vector2f& center)
 {
     view.setCenter(center);
+    this->center = center;
 }
 
 void ZoomView::setSize(const sf::Vector2f& size)
@@ -1005,10 +1006,14 @@ void ZoomView::handleEvent(const std::optional<sf::Event>& e)
         if (!containPos(sf::Vector2f(pixelPos))) return;
         std::cerr << "Position in\n";
         sf::Vector2f beforeZoom = window->mapPixelToCoords(pixelPos, view);
-        if (scroll->delta > 0)
+        if (scroll->delta > 0) {
+            zoomLevel /= zoomFactor;
             view.zoom(1.f / zoomFactor);
-        else
+        }
+        else {
+            zoomLevel *= zoomFactor;
             view.zoom(zoomFactor);
+        }
 
         sf::Vector2f afterZoom = window->mapPixelToCoords(pixelPos, view);
         view.move(beforeZoom - afterZoom);
@@ -1033,6 +1038,13 @@ void ZoomView::handleEvent(const std::optional<sf::Event>& e)
         view.move(delta);
         lastMousePos = currentPos;
     }
+}
+
+void ZoomView::resetView()
+{
+    this->view.zoom(1.f / zoomLevel);
+    zoomLevel = 1.f;
+    this->view.setCenter(center);
 }
 
 }

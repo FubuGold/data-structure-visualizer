@@ -29,6 +29,23 @@ extern std::vector<DebugDot> debugDots;
 
 //======================================================//
 
+class ThemeRectangle : public sf::Drawable, public sf::Transformable
+{
+protected:
+    
+    void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
+
+public:
+    mutable sf::RectangleShape rect;
+
+    ThemeRectangle(
+        sf::Vector2f size = {0,0},
+        sf::Vector2f pos = {0,0}
+    );
+};
+
+//======================================================//
+
 /**
  * @brief Text that can change the value
  * 
@@ -64,13 +81,13 @@ public:
 class Node : public sf::Drawable, public sf::Transformable
 {
 protected:
-    sf::CircleShape circle;
+    mutable sf::CircleShape circle;
     sf::CircleShape highlightOutline;
     sf::Text text;
 
     sf::Vector2f pos;
     sf::Color bgColor;
-    sf::Color specialColor;
+    mutable sf::Color specialColor;
 
     bool isHighlighted;
     bool isSpecial;
@@ -88,7 +105,7 @@ public:
         int borderThickness = 0,
         int highlightThickness = 0,
         sf::Color bgColor = sf::Color::Transparent,
-        sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::NETURAL],
+        sf::Color textColor = Global::colorSet[0][Global::COLOR_TYPE::NEUTRAL],
         sf::Color borderColor = Global::colorSet[0][Global::COLOR_TYPE::MAIN],
         sf::Color highlightedColor = Global::colorSet[0][Global::COLOR_TYPE::HIGHLIGHT],
         sf::Color specialColor = Global::colorSet[0][Global::COLOR_TYPE::SPECIAL]
@@ -117,13 +134,14 @@ protected:
 
     static constexpr float arrowRad = 6;
 
-    sf::CircleShape arrowHead;
     sf::Vector2f startPos,endPos;
-    sf::RectangleShape line;
+    mutable sf::CircleShape arrowHead;
+    mutable sf::RectangleShape line;
     int lineThickness;
 
-    sf::Color normalColor, highlightColor, specialColor;
-    sf::Text text;
+    sf::Color normalColor, highlightColor;
+    mutable sf::Color specialColor;
+    mutable sf::Text text;
     sf::RectangleShape textBg;
     
     void draw(sf::RenderTarget& target, sf::RenderStates state = sf::RenderStates::Default) const override;
@@ -132,6 +150,7 @@ protected:
 
     bool directed = true;
     bool isSpecial = false;
+    bool isHighlight = false;
 
 public:
 

@@ -29,6 +29,26 @@ void DebugDot::draw(sf::RenderTarget& target, sf::RenderStates state) const
 
 //======================================================//
 
+// Theme rectangle implementation
+
+ThemeRectangle::ThemeRectangle(
+    sf::Vector2f size,
+    sf::Vector2f pos
+) : rect(size)
+{
+    rect.setPosition(pos);
+}
+
+void ThemeRectangle::draw(sf::RenderTarget& target, sf::RenderStates state) const
+{
+    if (rect.getFillColor() != Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]) {
+        rect.setFillColor(Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]);
+    }
+    target.draw(rect,state);
+}
+
+//======================================================//
+
 // Value text specific implementation
 
 template<>
@@ -95,6 +115,13 @@ Node::Node(
 
 void Node::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
+    if (this->circle.getOutlineColor() != Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]) {
+        this->circle.setOutlineColor(Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]);
+    }
+    if (this->isSpecial && specialColor != Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::SPECIAL]) {
+        specialColor = Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::SPECIAL];
+        this->circle.setFillColor(specialColor);
+    }
     target.draw(this->circle, state);
     target.draw(this->text, state);
     if (this->isHighlighted) target.draw(this->highlightOutline);
@@ -197,6 +224,20 @@ Line::Line(
 
 void Line::draw(sf::RenderTarget& target, sf::RenderStates state) const
 {
+    if (specialColor != Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]) {
+        specialColor = Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN];
+        if (isSpecial && !isHighlight) {
+            if (arrowHead.getFillColor() != specialColor) {
+                arrowHead.setFillColor(specialColor);
+            }
+            if (line.getFillColor() != specialColor) {
+                line.setFillColor(specialColor);
+            }
+        }
+    }
+    if (text.getFillColor() != Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]) {
+        text.setFillColor(Global::colorSet[Global::curColorSet][Global::COLOR_TYPE::MAIN]);
+    }
     target.draw(this->line,state);
     target.draw(textBg);
     if (this->directed) target.draw(this->arrowHead,state);
@@ -227,6 +268,7 @@ void Line::setupLine()
 
 void Line::setHighlight(bool val)
 {
+    isHighlight = val;
     if (val) {
         this->line.setFillColor(highlightColor);
         this->arrowHead.setFillColor(highlightColor);
