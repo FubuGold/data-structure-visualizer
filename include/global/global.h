@@ -31,12 +31,14 @@ inline sf::Font textFont("asset/font/PixelifySans-Regular.ttf");
 inline sf::Font codeFont("asset/font/IBMPlexMono-Regular.ttf");
 inline sf::Font numberFont("asset/font/Play-Regular.ttf");
 
+inline sf::Texture settingIcon("asset/icon/setting.png");
+
 inline float animationSpeed = 1;
 
 enum COLOR_TYPE
 {
     BACKGROUND,
-    NETURAL,
+    NEUTRAL,
     MAIN,
     HIGHLIGHT,
     DISABLE,
@@ -44,8 +46,19 @@ enum COLOR_TYPE
     SPECIAL
 };
 
-inline const sf::Color colorSet[1][7] =  {
+inline const int numColorSet = 5;
+inline int curColorSet = 0;
+
+inline const sf::Color colorSet[5][7] =  {
     {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x539F64FF), sf::Color(0xF94842FF),
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)},
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x3F3BC8FF), sf::Color(0xF94842FF),
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)},
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0xE47C3BFF), sf::Color(0xF94842FF),
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)},
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x9E41DBFF), sf::Color(0xF94842FF),
+     sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)},
+    {sf::Color(0xFFFFFFFF), sf::Color(0x000000FF), sf::Color(0x00B7F9FF), sf::Color(0xF94842FF),
      sf::Color(0xA0A0A0FF), sf::Color(0xFFFF77FF), sf::Color(0x91DAA1FF)}
 };
 
@@ -143,6 +156,11 @@ static std::string openFile()
     char * res = tinyfd_openFileDialog("Choose input file","",2,lFilterPatterns, "Text file", 0);
     if (res == nullptr) return "";
     return std::string(res);
+}
+
+static void invalidFormat()
+{
+    int res = tinyfd_messageBox("File input","Invalid file input","ok","error",1);
 }
 
 }
