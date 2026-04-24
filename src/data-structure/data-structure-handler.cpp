@@ -707,7 +707,7 @@ void SLLHandler::file()
     }
 
     postprocessing();
-    endAnimation();
+    // endAnimation();
 }
 
 //======================================================//
