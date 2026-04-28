@@ -31,8 +31,6 @@ inline sf::Font textFont("asset/font/PixelifySans-Regular.ttf");
 inline sf::Font codeFont("asset/font/IBMPlexMono-Regular.ttf");
 inline sf::Font numberFont("asset/font/Play-Regular.ttf");
 
-inline sf::Texture settingIcon("asset/icon/setting.png");
-
 inline float animationSpeed = 1;
 
 enum COLOR_TYPE
